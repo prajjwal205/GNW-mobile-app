@@ -1,0 +1,187 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../homepage.dart';
+import '../providers/auth_provider.dart';
+import '../utils/responsive_helper.dart';
+
+class LoginPage extends ConsumerStatefulWidget {
+  @override
+  _LoginPageState createState() => _LoginPageState();
+}
+
+class _LoginPageState extends ConsumerState<LoginPage> {
+  final TextEditingController emailController = TextEditingController();
+  final TextEditingController passwordController = TextEditingController();
+
+  void handleLogin() async {
+    String Email = emailController.text.trim();
+    String Password = passwordController.text.trim();
+
+    if (Email.isEmpty || Password.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Please enter both email and password")),
+      );
+      return;
+    }
+    final success = await ref.read(authControllerProvider.notifier).login(Email, Password);
+    if (success && mounted) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const Homepage()),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final authState = ref.watch(authControllerProvider);
+    ref.listen(authControllerProvider, (previous, next) {
+      if (next.hasError) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(next.error.toString()),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    });
+
+    return Scaffold(
+      body: SafeArea(
+        child: Padding(
+          padding: EdgeInsets.symmetric(
+            horizontal: ResponsiveHelper.screenWidth(context) * 0.05,          ),
+          child: Center(
+            child: SingleChildScrollView(
+              child: Column(
+                children: [
+                  Column(
+                    children: [
+                      Image.asset(
+                        "lib/images/GNW_RED_LOGO.png",
+                        height: ResponsiveHelper.screenHeight(context) * 0.20,
+                        width: ResponsiveHelper.screenWidth(context) * 0.4,
+                      ),
+                      const SizedBox(height: 5),
+                      const Text(
+                        "No.1 Search Engine in \n Greater Noida West",
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
+                  ),
+
+                  SizedBox(height: ResponsiveHelper.screenHeight(context) * 0.04),
+                  const Text(
+                    "Login here",
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.red,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  const Text(
+                    "Welcome back you ha've \n been missed!",
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    textAlign: TextAlign.center,
+                  ),
+                  SizedBox(height: ResponsiveHelper.screenHeight(context) *0.03),
+
+                  TextField(
+                    controller: emailController,
+                    decoration: InputDecoration(
+                      labelText: "Email", // Changed from Mobile to Email
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(30),
+                      ),
+                    ),
+                    keyboardType: TextInputType.emailAddress,
+                  ),
+                  SizedBox(height:ResponsiveHelper.screenHeight(context) * 0.03),
+
+                  TextField(
+                    controller: passwordController,
+                    decoration: InputDecoration(
+                      labelText: "Password",
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(30),
+                      ),
+                    ),
+                    obscureText: true,
+                  ),
+
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      TextButton(
+                        onPressed: () {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text("New User tapped")),
+                          );
+                        },
+                        child: const Text(
+                          "New User ?",
+                          style: TextStyle(color: Colors.blueAccent),
+                        ),
+                      ),
+                      TextButton(
+                        onPressed: () {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text("Forgot Password tapped")),
+                          );
+                        },
+                        child: const Text(
+                          "Forgot your password?",
+                          style: TextStyle(color: Colors.black54),
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  if (authState.hasError)
+                    Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Text(
+                        authState.error.toString(),
+                        style: const TextStyle(color: Colors.red),
+                      ),
+                    ),
+
+                  SizedBox(height: ResponsiveHelper.screenHeight(context) * 0.03),
+
+                  /// Sign in button
+                  // 7. Show Spinner if Loading, otherwise show Button
+                  authState.isLoading
+                      ? const CircularProgressIndicator()
+                      : ElevatedButton(
+                    onPressed: handleLogin, // Calls our new function
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.red,
+                      minimumSize: Size(double.infinity,
+                          ResponsiveHelper.screenHeight(context) * 0.065),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(30),
+                      ),
+                    ),
+                    child: const Text(
+                      "Sign in",
+                      style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
