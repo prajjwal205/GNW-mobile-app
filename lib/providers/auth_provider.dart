@@ -1,156 +1,335 @@
+// import 'package:flutter_riverpod/flutter_riverpod.dart';
+// import 'dart:convert';
+// import 'package:http/http.dart' as http;
+// import 'package:shared_preferences/shared_preferences.dart';
+// import '../login_signup page/login_model.dart'; // Ensure this path matches your folder name exactly
+//
+// // --- SERVICE LAYER (Talks to the Internet) ---
+// class AuthService {
+//   static const String domain = "http://gnwbazaar-002-site2.qtempurl.com";
+//
+//   Future<Object> login(String email, String password) async {
+//     try {
+//       final response = await http.post(
+//         Uri.parse("$domain/GNW_Login"),
+//         headers: {"Content-Type": "application/x-www-form-urlencoded"},
+//         body: {
+//           "Email": email,
+//           "Password": password,
+//         },
+//       );
+//       // 🖨️ PRINT LOGS
+//       print("🔸 Status Code: ${response.statusCode}");
+//       print("🔸 Body: ${response.body}");
+//
+//       if (response.statusCode == 200) {
+//         final data = jsonDecode(response.body);
+//         final accessToken = data['Value']?['accessToken'];
+//         final refreshToken = data['Value']?['Token'];
+//
+//         if (accessToken != null) {
+//           final prefs = await SharedPreferences.getInstance();
+//           await prefs.setString('auth_token', accessToken);
+//           if (refreshToken != null) await prefs.setString('refresh_token', refreshToken);
+//           // return true; // here chaninging
+//           return {"success": true, "message": "Login Successful"};
+//         }
+//       }
+//       return false;
+//     } catch (e) {
+//       return false;
+//     }
+//   }
+//
+//   Future<bool> signup(String name, String email, String phone, String password) async {
+//     try {
+//       final response = await http.post(
+//         Uri.parse("$domain/GNW_Signup"),
+//         headers: {"Content-Type": "application/x-www-form-urlencoded"},
+//         body: {
+//           "Name": name,
+//           "Email": email,
+//           "PhoneNumber": phone,
+//           "Password": password,
+//           "UserRole": "user"
+//         },
+//       );
+//       // 🖨️ PRINT LOGS
+//       print("🔸 Status Code: ${response.statusCode}");
+//       print("🔸 Body: ${response.body}");
+//       return response.statusCode == 200;
+//     } catch (e) {
+//       return false;
+//     }
+//   }
+//
+//   Future<bool> forgotPassword(String email) async {
+//     try {
+//       final response = await http.post(
+//         Uri.parse("$domain/GNW_ForgotPassword"),
+//         headers: {"Content-Type": "application/x-www-form-urlencoded"},
+//         body: {
+//           "Email": email,
+//         },
+//       );
+//       return response.statusCode == 200;
+//     } catch (e) {
+//       return false;
+//     }
+//   }
+//
+//   Future<void> logout() async {
+//     final prefs = await SharedPreferences.getInstance();
+//     await prefs.clear();
+//   }
+// }
+//
+// // --- VIEWMODEL (The 'Brain' - Handles Validation & State) ---
+// class AuthController extends StateNotifier<AsyncValue<void>> {
+//   final AuthService _authService;
+//
+//   AuthController(this._authService) : super(const AsyncValue.data(null));
+//
+//   // 1. LOGIN LOGIC
+//   Future<String?> login(String email, String password) async {
+//     if (email.isEmpty || password.isEmpty) return "Please enter email and password";
+//
+//     state = const AsyncValue.loading();
+//     final result = await _authService.login(email, password);
+//     state = const AsyncValue.data(null);
+//
+// // FIX: Explicit check == true
+//     if (result['success'] == true) {
+//       return null;
+//     } else {
+//       return result['message'];
+//     }  }
+//
+//   // 2. SIGNUP LOGIC (Validation happens here, not in UI)
+//   Future<String?> signup({
+//     required String name,
+//     required String email,
+//     required String phone,
+//     required String password,
+//     required String confirmPassword,
+//   }) async {
+//     if (name.isEmpty || email.isEmpty || phone.isEmpty || password.isEmpty) {
+//       return "Please fill all fields";
+//     }
+//     if (password != confirmPassword) {
+//       return "Passwords do not match";
+//     }
+//
+//     state = const AsyncValue.loading();
+//     final success = await _authService.signup(name, email, phone, password);
+//     state = const AsyncValue.data(null);
+//
+//     return success ? null : "Signup Fald - Please try again.";
+//   }
+//
+//   // 3. FORGOT PASSWORD LOGIC
+//   Future<String?> forgotPassword(String email) async {
+//     if (email.isEmpty) return "Please enter your email";
+//
+//     state = const AsyncValue.loading();
+//     final success = await _authService.forgotPassword(email);
+//     state = const AsyncValue.data(null);
+//
+//     return success ? null : "Request failed. Please verify your email.";
+//   }
+//
+//   Future<void> logout() async {
+//     await _authService.logout();
+//   }
+// }
+//
+// // --- PROVIDERS ---
+// final authServiceProvider = Provider((ref) => AuthService());
+//
+// final authControllerProvider = StateNotifierProvider<AuthController, AsyncValue<void>>((ref) {
+//   return AuthController(ref.watch(authServiceProvider));
+// });
+
+
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../login_signup page/login_model.dart';
 
+// --- SERVICE LAYER ---
 class AuthService {
-  // Base Domain
   static const String domain = "http://gnwbazaar-002-site2.qtempurl.com";
 
-  // Endpoints
-  static const String loginUrl = "$domain/GNW_Login"; // Verified working
-  static const String logoutUrl = "$domain/GNW_Logout";
-  static const String refreshUrl = "$domain/GNW_RefreshToken";
-
-  // -------------------- LOGIN --------------------
-  Future<bool> login(LoginRequest request) async {
-    print("--- LOGIN ATTEMPT ---");
+  // --- LOGIN ---
+  Future<Map<String, dynamic>> login(String email, String password) async {
+    print("🔹 LOGIN REQUEST: $email");
     try {
+      final url = Uri.parse("$domain/GNW_Login");
       final response = await http.post(
-        Uri.parse(loginUrl),
+        url,
         headers: {"Content-Type": "application/x-www-form-urlencoded"},
         body: {
-          "Email": request.email,
-          "Password": request.password
+          "Email": email,
+          "Password": password,
         },
       );
 
-      if (response.statusCode == 200) {
-        final Map<String, dynamic> responseData = jsonDecode(response.body);
-
-        // 1. EXTRACT DATA
-        // 'accessToken' is the short-term ID card
-        // 'Token' is the long-term Refresh ticket
-        final String? accessToken = responseData['Value']?['accessToken'];
-        final String? refreshToken = responseData['Value']?['Token'];
-
-        // 2. SAVE TO STORAGE
-        if (accessToken != null && accessToken.isNotEmpty) {
-          final prefs = await SharedPreferences.getInstance();
-          await prefs.setString('auth_token', accessToken);
-
-          if (refreshToken != null) {
-            await prefs.setString('refresh_token', refreshToken);
-          }
-
-          print("✅ Login Success! Tokens saved.");
-          return true;
-        }
-      }
-      return false;
-    } catch (e) {
-      print("Login Error: $e");
-      return false;
-    }
-  }
-
-  // -------------------- LOGOUT --------------------
-  Future<void> logout() async {
-    print("--- LOGOUT ATTEMPT ---");
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('auth_token');
-
-    // 1. Call API to invalidate session on server
-    try {
-      if (token != null) {
-        await http.post(
-          Uri.parse(logoutUrl),
-          headers: {
-            "Authorization": "Bearer $token" // Tell server WHO is logging out
-          },
-        );
-      }
-    } catch (e) {
-      print("Logout API Warning: $e"); // Continue logging out locally even if API fails
-    }
-
-    // 2. WIPE DATA (Crucial!)
-    await prefs.clear();
-    print("✅ Local Data Cleared. User logged out.");
-  }
-
-  // -------------------- REFRESH TOKEN --------------------
-  Future<bool> tryRefreshToken() async {
-    print("--- REFRESHING TOKEN ---");
-    final prefs = await SharedPreferences.getInstance();
-    final oldAccess = prefs.getString('auth_token');
-    final oldRefresh = prefs.getString('refresh_token');
-
-    if (oldAccess == null || oldRefresh == null) return false;
-
-    try {
-      final response = await http.post(
-        Uri.parse(refreshUrl),
-        headers: {"Content-Type": "application/json"},
-        body: jsonEncode({
-          "AccessToken": oldAccess,
-          "RefreshToken": oldRefresh
-        }),
-      );
+      print("🔸 Status Code: ${response.statusCode}");
+      print("🔸 Body: ${response.body}");
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        final newAccess = data['Value']?['accessToken'];
-        final newRefresh = data['Value']?['Token'];
+        final accessToken = data['Value']?['accessToken'];
+        final refreshToken = data['Value']?['Token'];
 
-        if (newAccess != null) {
-          await prefs.setString('auth_token', newAccess);
-          if (newRefresh != null) {
-            await prefs.setString('refresh_token', newRefresh);
-          }
-          print("✅ Token Refreshed!");
-          return true;
+        if (accessToken != null) {
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setString('auth_token', accessToken);
+          if (refreshToken != null) await prefs.setString('refresh_token', refreshToken);
+
+          return {"success": true, "message": "Login Successful"};
         }
       }
-      return false;
+
+      try {
+        final errorData = jsonDecode(response.body);
+        return {"success": false, "message": errorData['Message'] ?? "Invalid Credentials"};
+      } catch (_) {
+        return {"success": false, "message": "Server Error: ${response.statusCode}"};
+      }
+
     } catch (e) {
-      print("Refresh Failed: $e");
+      print("❌ Error: $e");
+      return {"success": false, "message": "Connection Error: $e"};
+    }
+  }
+
+  // --- SIGNUP ---
+  Future<Map<String, dynamic>> signup(String name, String email, String phone, String password) async {
+    print("🔹 SIGNUP REQUEST: $email");
+    try {
+      final url = Uri.parse("$domain/GNW_Signup");
+      final response = await http.post(
+        url,
+        headers: {"Content-Type": "application/x-www-form-urlencoded"},
+        body: {
+          "Name": name,
+          "Email": email,
+          "PhoneNumber": phone,
+          "Password": password,
+          "UserRole": "user"
+        },
+      );
+
+      print("🔸 Status Code: ${response.statusCode}");
+      print("🔸 Body: ${response.body}");
+
+      if (response.statusCode == 200) {
+        return {"success": true, "message": "Signup Successful"};
+      } else {
+        final data = jsonDecode(response.body);
+        return {
+          "success": false,
+          "message": data['Message'] ?? "Signup Failed (Code: ${response.statusCode})"
+        };
+      }
+    } catch (e) {
+      print("❌ Error: $e");
+      return {"success": false, "message": "Connection Error: $e"};
+    }
+  }
+
+  // --- FORGOT PASSWORD ---
+  Future<bool> forgotPassword(String email) async {
+    try {
+      final response = await http.post(
+        Uri.parse("$domain/GNW_ForgotPassword"),
+        headers: {"Content-Type": "application/x-www-form-urlencoded"},
+        body: {"Email": email},
+      );
+      print("Forgot Pass Status: ${response.statusCode}");
+      return response.statusCode == 200;
+    } catch (e) {
       return false;
     }
   }
+
+  Future<void> logout() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.clear();
+  }
 }
 
-// -------------------- CONTROLLER --------------------
+// --- VIEWMODEL ---
 class AuthController extends StateNotifier<AsyncValue<void>> {
   final AuthService _authService;
 
   AuthController(this._authService) : super(const AsyncValue.data(null));
 
-  Future<bool> login(String email, String password) async {
-    state = const AsyncValue.loading();
-    final request = LoginRequest(email: email, password: password);
-    final success = await _authService.login(request);
+  // 1. LOGIN
+  Future<String?> login(String email, String password) async {
+    if (email.isEmpty || password.isEmpty) return "Please enter email and password";
 
-    if (success) {
-      state = const AsyncValue.data(null);
-      return true;
+    state = const AsyncValue.loading();
+    final result = await _authService.login(email, password);
+    state = const AsyncValue.data(null);
+
+    // FIX: Explicit check == true
+    if (result['success'] == true) {
+      return null;
     } else {
-      state = AsyncValue.error("Invalid Email or Password", StackTrace.current);
-      return false;
+      return result['message'];
     }
+  }
+
+  // 2. SIGNUP
+  Future<String?> signup({
+    required String name,
+    required String email,
+    required String phone,
+    required String password,
+    required String confirmPassword,
+  }) async {
+    if (name.isEmpty || email.isEmpty || phone.isEmpty || password.isEmpty) {
+      return "Please fill all fields";
+    }
+    if (password != confirmPassword) {
+      return "Passwords do not match";
+    }
+
+    state = const AsyncValue.loading();
+    final result = await _authService.signup(name, email, phone, password);
+    state = const AsyncValue.data(null);
+
+    // FIX: Explicit check == true (This is likely Line 101)
+    if (result['success'] == true) {
+      return null;
+    } else {
+      return result['message'];
+    }
+  }
+
+  // 3. FORGOT PASSWORD
+  Future<String?> forgotPassword(String email) async {
+    if (email.isEmpty) return "Please enter your email";
+
+    state = const AsyncValue.loading();
+    final success = await _authService.forgotPassword(email);
+    state = const AsyncValue.data(null);
+
+    return success ? null : "Request failed. Please verify your email.";
   }
 
   Future<void> logout() async {
     await _authService.logout();
-    // After this, your UI should check the token and redirect to Login
   }
 }
 
-// -------------------- PROVIDERS --------------------
+// --- PROVIDERS ---
 final authServiceProvider = Provider((ref) => AuthService());
 
 final authControllerProvider = StateNotifierProvider<AuthController, AsyncValue<void>>((ref) {
-  final authService = ref.watch(authServiceProvider);
-  return AuthController(authService);
+  return AuthController(ref.watch(authServiceProvider));
 });

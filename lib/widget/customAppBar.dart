@@ -24,48 +24,60 @@ PreferredSizeWidget buildCustomAppBar(
       child: Container(
         height: responsiveHeight,
         color: const Color(0xFFFFA726), // Orange background
-        // FIX 1: Use specific padding. Left keeps resizing, Right is fixed small (5)
         padding: EdgeInsets.only(
             left: padding.horizontal / 2,
-            right: 5 // Forces icons closer to the right edge
+            right: 5
         ),
         child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             // --- LEFT SIDE: Logo + Name ---
-            Row(
-              children: [
-                Image.asset(
-                  'lib/images/GNW_RED_LOGO.png',
-                  height: responsiveHeight * 0.80, // Dynamic Logo Size
-                ),
-                SizedBox(width: spacing),
-                Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Hi,',
-                      style: TextStyle(
-                        color: Colors.black,
-                        fontSize: ResponsiveHelper.getFontSize(context, baseSize: 14),
+            Expanded(
+              child: Row(
+                children: [
+                  Image.asset(
+                    'lib/images/GNW_RED_LOGO.png',
+                    height: responsiveHeight * 0.80,
+                  ),
+                  SizedBox(width: spacing),
+
+                  // FIX 1: Wrap Column in Flexible -> FittedBox
+                  // This prevents vertical overflow if font is huge
+                  Flexible(
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: Alignment.centerLeft,
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Hi,',
+                            maxLines: 1,
+                            style: TextStyle(
+                              color: Colors.black,
+                              fontSize: ResponsiveHelper.getFontSize(context, baseSize: 14),
+                            ),
+                          ),
+                          Text(
+                            userName.toUpperCase(),
+                            maxLines: 1,
+                            style: TextStyle(
+                              color: Colors.black,
+                              fontSize: ResponsiveHelper.getFontSize(context, baseSize: 16),
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                    Text(
-                      userName.toUpperCase(),
-                      style: TextStyle(
-                        color: Colors.black,
-                        fontSize: ResponsiveHelper.getFontSize(context, baseSize: 16),
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
+                  ),
+                ],
+              ),
             ),
 
             // --- RIGHT SIDE: Icons & Menu ---
             Row(
+              mainAxisSize: MainAxisSize.min,
               children: [
                 // 1. Profile
                 InkWell(
@@ -95,14 +107,13 @@ PreferredSizeWidget buildCustomAppBar(
                 // 3. Notification
                 _roundedIconWithLabel(context, Icons.notifications, "Notification"),
 
-                // FIX 2: Use half-spacing here (reduces gap between Notification & Dots)
-                SizedBox(width: spacing /50),
+                // Small gap between Notification and 3-Dots
+                SizedBox(width: spacing / 4),
 
-                // 4. THREE DOT MENU (Logout & Share)
+                // 4. THREE DOT MENU
                 Consumer(
                   builder: (context, ref, child) {
                     return PopupMenuButton<String>(
-                      // FIX 3: Remove the button's internal invisible padding
                       padding: EdgeInsets.zero,
                       constraints: const BoxConstraints(),
                       icon: Icon(
@@ -158,32 +169,33 @@ PreferredSizeWidget buildCustomAppBar(
   );
 }
 
-// Helper widget for fully responsive icons
+// FIX 2: Helper widget wrapped in FittedBox
+// This scales down the icon+text if they get taller than the App Bar
 Widget _roundedIconWithLabel(BuildContext context, IconData icon, String label) {
-  return Column(
-    mainAxisAlignment: MainAxisAlignment.center,
-    children: [
-      CircleAvatar(
-        // Responsive Radius
-        radius: ResponsiveHelper.getIconSize(context, baseSize: 18),
-        backgroundColor: Colors.black,
-        child: Icon(
-          icon,
-          color: Colors.white,
-          // Responsive Icon Size
-          size: ResponsiveHelper.getIconSize(context, baseSize: 22),
+  return FittedBox(
+    fit: BoxFit.scaleDown,
+    child: Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        CircleAvatar(
+          radius: ResponsiveHelper.getIconSize(context, baseSize: 18),
+          backgroundColor: Colors.black,
+          child: Icon(
+            icon,
+            color: Colors.white,
+            size: ResponsiveHelper.getIconSize(context, baseSize: 22),
+          ),
         ),
-      ),
-      SizedBox(height: 2),
-      Text(
-        label,
-        style: TextStyle(
-            color: Colors.black,
-            // Responsive Font Size
-            fontSize: ResponsiveHelper.getFontSize(context, baseSize: 10),
-            fontWeight: FontWeight.bold
+        SizedBox(height: 2),
+        Text(
+          label,
+          style: TextStyle(
+              color: Colors.black,
+              fontSize: ResponsiveHelper.getFontSize(context, baseSize: 10),
+              fontWeight: FontWeight.bold
+          ),
         ),
-      ),
-    ],
+      ],
+    ),
   );
 }

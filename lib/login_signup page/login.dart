@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:gnw/login_signup%20page/create.dart';
+import 'package:gnw/login_signup%20page/forgot_password.dart';
 import '../homepage.dart';
 import '../providers/auth_provider.dart';
 import '../utils/responsive_helper.dart';
@@ -14,22 +16,32 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   final TextEditingController passwordController = TextEditingController();
 
   void handleLogin() async {
-    String Email = emailController.text.trim();
-    String Password = passwordController.text.trim();
+    String email = emailController.text.trim();
+    String password = passwordController.text.trim();
 
-    if (Email.isEmpty || Password.isEmpty) {
+    if (email.isEmpty || password.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Please enter both email and password")),
       );
       return;
     }
-    final success = await ref.read(authControllerProvider.notifier).login(Email, Password);
-    if (success && mounted) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const Homepage()),
-      );
+    final String? error = await ref.read(authControllerProvider.notifier).login(email, password);
+    if (mounted) {
+      if (error == null) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const Homepage()),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(error),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
+    // --- CHANGE ENDS HERE ---
   }
 
   @override
@@ -118,10 +130,12 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
+                      // 1. New User? -> Goes to Signup Page
                       TextButton(
                         onPressed: () {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text("New User tapped")),
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => const SignupPage()),
                           );
                         },
                         child: const Text(
@@ -129,10 +143,13 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                           style: TextStyle(color: Colors.blueAccent),
                         ),
                       ),
+
+                      // 2. Forgot Password? -> Goes to Forgot Password Page
                       TextButton(
                         onPressed: () {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text("Forgot Password tapped")),
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => const ForgotPasswordPage()),
                           );
                         },
                         child: const Text(
