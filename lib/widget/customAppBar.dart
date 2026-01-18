@@ -76,91 +76,94 @@ PreferredSizeWidget buildCustomAppBar(
             ),
 
             // --- RIGHT SIDE: Icons & Menu ---
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // 1. Profile
-                InkWell(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => Profilepage()),
-                    );
-                  },
-                  child: _roundedIconWithLabel(context, Icons.person, "Profile"),
-                ),
-                SizedBox(width: spacing),
+            Align(
+              alignment: Alignment.center,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // 1. Profile
+                  InkWell(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => Profilepage()),
+                      );
+                    },
+                    child: _roundedIconWithLabel(context, Icons.person,),
+                  ),
+                  SizedBox(width: spacing),
 
-                // 2. Home
-                InkWell(
-                  onTap: () {
-                    Navigator.pushAndRemoveUntil(
-                      context,
-                      MaterialPageRoute(builder: (context) => const Homepage()),
-                          (route) => false,
-                    );
-                  },
-                  child: _roundedIconWithLabel(context, Icons.home, "Home"),
-                ),
-                SizedBox(width: spacing),
+                  // 2. Home
+                  InkWell(
+                    onTap: () {
+                      Navigator.pushAndRemoveUntil(
+                        context,
+                        MaterialPageRoute(builder: (context) => const Homepage()),
+                            (route) => false,
+                      );
+                    },
+                    child: _roundedIconWithLabel(context, Icons.home),
+                  ),
+                  SizedBox(width: spacing),
 
-                // 3. Notification
-                _roundedIconWithLabel(context, Icons.notifications, "Notification"),
+                  // 3. Notification
+                  _roundedIconWithLabel(context, Icons.notifications),
 
-                // Small gap between Notification and 3-Dots
-                SizedBox(width: spacing / 4),
+                  // Small gap between Notification and 3-Dots
+                  SizedBox(width: spacing / 4),
 
-                // 4. THREE DOT MENU
-                Consumer(
-                  builder: (context, ref, child) {
-                    return PopupMenuButton<String>(
-                      padding: EdgeInsets.zero,
-                      constraints: const BoxConstraints(),
-                      icon: Icon(
-                        Icons.more_vert,
-                        color: Colors.black,
-                        size: ResponsiveHelper.getIconSize(context, baseSize: 29),
-                      ),
-                      onSelected: (value) async {
-                        if (value == 'logout') {
-                          await ref.read(authControllerProvider.notifier).logout();
-                          if (context.mounted) {
-                            Navigator.pushAndRemoveUntil(
-                              context,
-                              MaterialPageRoute(builder: (context) => LoginPage()),
-                                  (route) => false,
+                  // 4. THREE DOT MENU
+                  Consumer(
+                    builder: (context, ref, child) {
+                      return PopupMenuButton<String>(
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
+                        icon: Icon(
+                          Icons.more_vert,
+                          color: Colors.black,
+                          size: ResponsiveHelper.getIconSize(context, baseSize: 29),
+                        ),
+                        onSelected: (value) async {
+                          if (value == 'logout') {
+                            await ref.read(authControllerProvider.notifier).logout();
+                            if (context.mounted) {
+                              Navigator.pushAndRemoveUntil(
+                                context,
+                                MaterialPageRoute(builder: (context) => LoginPage()),
+                                    (route) => false,
+                              );
+                            }
+                          } else if (value == 'share') {
+                            await Share.share(
+                                'Check out GNW - The No.1 Search Engine! \nhttp://gnwbazaar.com',
+                                subject: 'GNW App Invitation'
                             );
                           }
-                        } else if (value == 'share') {
-                          await Share.share(
-                              'Check out GNW - The No.1 Search Engine! \nhttp://gnwbazaar.com',
-                              subject: 'GNW App Invitation'
-                          );
-                        }
-                      },
-                      itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
-                        PopupMenuItem<String>(
-                          value: 'share',
-                          child: ListTile(
-                            leading: Icon(Icons.share, color: Colors.blue, size: 20),
-                            title: Text('Share App', style: TextStyle(fontSize: 14)),
-                            contentPadding: EdgeInsets.zero,
+                        },
+                        itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
+                          PopupMenuItem<String>(
+                            value: 'share',
+                            child: ListTile(
+                              leading: Icon(Icons.share, color: Colors.blue, size: 20),
+                              title: Text('Share App', style: TextStyle(fontSize: 14)),
+                              contentPadding: EdgeInsets.zero,
+                            ),
                           ),
-                        ),
-                        const PopupMenuDivider(),
-                        PopupMenuItem<String>(
-                          value: 'logout',
-                          child: ListTile(
-                            leading: Icon(Icons.logout, color: Colors.red, size: 20),
-                            title: Text('Logout', style: TextStyle(color: Colors.red, fontSize: 14)),
-                            contentPadding: EdgeInsets.zero,
+                          const PopupMenuDivider(),
+                          PopupMenuItem<String>(
+                            value: 'logout',
+                            child: ListTile(
+                              leading: Icon(Icons.logout, color: Colors.red, size: 20),
+                              title: Text('Logout', style: TextStyle(color: Colors.red, fontSize: 14)),
+                              contentPadding: EdgeInsets.zero,
+                            ),
                           ),
-                        ),
-                      ],
-                    );
-                  },
-                )
-              ],
+                        ],
+                      );
+                    },
+                  )
+                ],
+              ),
             )
           ],
         ),
@@ -171,28 +174,19 @@ PreferredSizeWidget buildCustomAppBar(
 
 // FIX 2: Helper widget wrapped in FittedBox
 // This scales down the icon+text if they get taller than the App Bar
-Widget _roundedIconWithLabel(BuildContext context, IconData icon, String label) {
+Widget _roundedIconWithLabel(BuildContext context, IconData icon) {
   return FittedBox(
     fit: BoxFit.scaleDown,
     child: Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         CircleAvatar(
-          radius: ResponsiveHelper.getIconSize(context, baseSize: 18),
+          radius: 16,
           backgroundColor: Colors.black,
           child: Icon(
             icon,
             color: Colors.white,
             size: ResponsiveHelper.getIconSize(context, baseSize: 22),
-          ),
-        ),
-        SizedBox(height: 2),
-        Text(
-          label,
-          style: TextStyle(
-              color: Colors.black,
-              fontSize: ResponsiveHelper.getFontSize(context, baseSize: 10),
-              fontWeight: FontWeight.bold
           ),
         ),
       ],
