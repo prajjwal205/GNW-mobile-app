@@ -14,6 +14,23 @@ class Homepage extends StatefulWidget {
 class _HomepageState extends State<Homepage> {
   @override
   Widget build(BuildContext context) {
+    final media = MediaQuery.of(context);
+    final width = media.size.width;
+    final height = media.size.height;
+
+    // ========= RESPONSIVE SCALES =========
+    final horizontalPadding = width * 0.03;
+    final verticalSpacing = height * 0.01;
+
+    final sponsorHeight = height * 0.12;
+    final searchHeight = height * 0.055;
+
+    final iconBoxSize = width * 0.15;
+    final iconPadding = iconBoxSize * 0.2;
+
+    final labelFontSize = (width * 0.035).clamp(11.0, 14.0);
+    final bannerFontSize = width * 0.03;
+
     return FutureBuilder<String>(
       future: UserService.fetchUserName(),
       builder: (context, snapshot) {
@@ -23,111 +40,117 @@ class _HomepageState extends State<Homepage> {
           );
         }
 
-        return MediaQuery(
-          data: MediaQuery.of(context)
-              .copyWith(textScaler: TextScaler.noScaling),
-          child: Scaffold(
-            appBar: buildCustomAppBar(context, snapshot.data!, 90),
-            body: SafeArea(
-              child: CustomScrollView(
-                slivers: [
-
-                  // ================= SPONSOR + SEARCH =================
-                  SliverToBoxAdapter(
+        return Scaffold(
+          appBar: buildCustomAppBar(context, snapshot.data!, 90),
+          body: SafeArea(
+            child: CustomScrollView(
+              physics: const BouncingScrollPhysics(),
+              slivers: [
+                // ================= SPONSOR + SEARCH =================
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding:
+                    EdgeInsets.symmetric(horizontal: horizontalPadding),
                     child: Column(
                       children: [
-                        const SizedBox(height: 8),
+                        SizedBox(height: verticalSpacing),
 
                         // Sponsor Banner
                         Container(
-                          height: 120,
-                          width: MediaQuery.of(context).size.width * 0.90,
-                          margin:
-                          const EdgeInsets.symmetric(horizontal: 12),
+                          height: sponsorHeight *1.5,
+                          width: double.infinity,
                           decoration: BoxDecoration(
                             color: Colors.grey.shade300,
-                            borderRadius: BorderRadius.circular(15),
+                            borderRadius: BorderRadius.circular(16),
                           ),
                           alignment: Alignment.center,
-                          child: const Text(
+                          child: Text(
                             "SPONSOR\nBANNER",
                             textAlign: TextAlign.center,
                             style: TextStyle(
-                              fontSize: 16,
+                              fontSize: bannerFontSize,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
                         ),
 
-                        const SizedBox(height: 10),
+                        SizedBox(height: verticalSpacing),
 
                         // Search Bar
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 12),
-                          child: SizedBox(
-                            height: 45,
-                            child: TextField(
-                              decoration: InputDecoration(
-                                hintText: "Search Ayurveda",
-                                prefixIcon: const Icon(Icons.search),
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(25),
-                                ),
-                                contentPadding:
-                                const EdgeInsets.symmetric(horizontal: 12),
+                        SizedBox(
+                          height: searchHeight,
+                          child: TextField(
+                            style:
+                            TextStyle(fontSize: labelFontSize*1.5),
+                            decoration: InputDecoration(
+                              hintText: "Search Ayurveda",
+                              prefixIcon: Icon(
+                                Icons.search,
+                                size: labelFontSize * 2.5,
                               ),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(25),
+                              ),
+                              isDense: true,
                             ),
                           ),
                         ),
 
-                        const SizedBox(height: 12),
+                        SizedBox(height: verticalSpacing*1.8),
                       ],
                     ),
                   ),
+                ),
 
-                  // ================= GRID =================
-                  SliverPadding(
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    sliver: SliverGrid(
-                      delegate: SliverChildBuilderDelegate(
-                            (context, index) {
-                          final items = _gridItems(context);
-                          return items[index];
-                        },
-                        childCount: _gridItems(context).length,
-                      ),
-                      gridDelegate:
-                      const SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 4,
-                        crossAxisSpacing: 12,
-                        mainAxisSpacing: 12,
-                        childAspectRatio: 0.9,
+                // ================= CATEGORY GRID =================
+                SliverPadding(
+                  padding:
+                  EdgeInsets.symmetric(horizontal: horizontalPadding),
+                  sliver: SliverGrid(
+                    delegate: SliverChildBuilderDelegate(
+                          (context, index) => _gridItems(
+                        context,
+                        iconBoxSize,
+                        iconPadding,
+                        labelFontSize,
+                      )[index],
+                      childCount: _gridItems(
+                        context,
+                        iconBoxSize,
+                        iconPadding,
+                        labelFontSize,
+                      ).length,
+                    ),
+                    gridDelegate:
+                    const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 4,          // ✅ ALWAYS 4
+                      crossAxisSpacing: 23, // helps to decrese the size between icons
+                      mainAxisSpacing: .01,
+                      childAspectRatio: 0.75,     // ✅ responsive height
+                    ),
+                  ),
+                ),
+
+                // ================= DEAL =================
+                SliverToBoxAdapter(
+                  child: Container(
+                    height: height * 0.07,
+                    margin: EdgeInsets.all(horizontalPadding),
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade300,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    alignment: Alignment.center,
+                    child: Text(
+                      "DEAL OF THE DAY",
+                      style: TextStyle(
+                        fontSize: bannerFontSize,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
                   ),
-
-                  // ================= DEAL OF THE DAY =================
-                  SliverToBoxAdapter(
-                    child: Container(
-                      height: 50,
-                      margin: const EdgeInsets.fromLTRB(12, 12, 12, 12),
-                      decoration: BoxDecoration(
-                        color: Colors.grey.shade300,
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      alignment: Alignment.center,
-                      child: const Text(
-                        "DEAL OF THE DAY",
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ),
-
-                ],
-              ),
+                ),
+              ],
             ),
           ),
         );
@@ -136,69 +159,94 @@ class _HomepageState extends State<Homepage> {
   }
 
   // ================= GRID ITEMS =================
-  List<Widget> _gridItems(BuildContext context) {
+  List<Widget> _gridItems(
+      BuildContext context,
+      double iconSize,
+      double iconPadding,
+      double fontSize,
+      ) {
     return [
-      _gridItem(
-        'lib/images/MEDICARE.png',
-        'Healthcare',
-            () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (_) => HealthcarePage()),
-          );
-        },
-      ),
-      _gridItem(
-        'lib/images/FOODIE.png',
-        'Food',
-            () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (_) => const FoodPage()),
-          );
-        },
-      ),
-      _gridItem('lib/images/SHOPPING.png', 'Shopping', _notImplemented),
-      _gridItem('lib/images/MAKEOVER.png', 'Makeovers', _notImplemented),
-      _gridItem('lib/images/EVENTS.png', 'Events', _notImplemented),
-      _gridItem('lib/images/TRAVEL.png', 'Travel', _notImplemented),
-      _gridItem('lib/images/HOMECARE_2.png', 'Homecare', _notImplemented),
-      _gridItem('lib/images/REAL_ESTATE.png', 'Property', _notImplemented),
-      _gridItem('lib/images/ASTROLOGY.png', 'Astrology', _notImplemented),
-      _gridItem('lib/images/EDUCATION.png', 'Education', _notImplemented),
-      _gridItem('lib/images/FITNESS.png', 'FitLife', _notImplemented),
-      _gridItem('lib/images/PETS.png', 'Pets', _notImplemented),
-      _gridItem('lib/images/RELOCATION.png', 'Relocation', _notImplemented),
-      _gridItem('lib/images/FINANCE.png', 'Finance', _notImplemented),
-      _gridItem('lib/images/SECURITY.png', 'Security', _notImplemented),
-      _gridItem('lib/images/SERVICES.png', 'Services', _notImplemented),
+      _gridItem('lib/images/MEDICARE.png', 'Healthcare', iconSize,
+          iconPadding, fontSize, () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => HealthcarePage()),
+            );
+          }),
+      _gridItem('lib/images/FOODIE.png', 'Food', iconSize, iconPadding,
+          fontSize, () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const FoodPage()),
+            );
+          }),
+      _gridItem('lib/images/SHOPPING.png', 'Shopping', iconSize,
+          iconPadding, fontSize, _notImplemented),
+      _gridItem('lib/images/MAKEOVER.png', 'Makeovers', iconSize,
+          iconPadding, fontSize, _notImplemented),
+      _gridItem('lib/images/EVENTS.png', 'Events', iconSize,
+          iconPadding, fontSize, _notImplemented),
+      _gridItem('lib/images/TRAVEL.png', 'Travel', iconSize,
+          iconPadding, fontSize, _notImplemented),
+      _gridItem('lib/images/HOMECARE_2.png', 'Homecare', iconSize,
+          iconPadding, fontSize, _notImplemented),
+      _gridItem('lib/images/REAL_ESTATE.png', 'Property', iconSize,
+          iconPadding, fontSize, _notImplemented),
+      _gridItem('lib/images/ASTROLOGY.png', 'Astrology', iconSize,
+          iconPadding, fontSize, _notImplemented),
+      _gridItem('lib/images/EDUCATION.png', 'Education', iconSize,
+          iconPadding, fontSize, _notImplemented),
+      _gridItem('lib/images/FITNESS.png', 'FitLife', iconSize,
+          iconPadding, fontSize, _notImplemented),
+      _gridItem('lib/images/PETS.png', 'Pets', iconSize,
+          iconPadding, fontSize, _notImplemented),
+      _gridItem('lib/images/RELOCATION.png', 'Relocation', iconSize,
+          iconPadding, fontSize, _notImplemented),
+      _gridItem('lib/images/FINANCE.png', 'Finance', iconSize,
+          iconPadding, fontSize, _notImplemented),
+      _gridItem('lib/images/SECURITY.png', 'Security', iconSize,
+          iconPadding, fontSize, _notImplemented),
+      _gridItem('lib/images/SERVICES.png', 'Services', iconSize,
+          iconPadding, fontSize, _notImplemented),
     ];
   }
 
-  // ================= GRID ITEM WIDGET =================
-  Widget _gridItem(String asset, String label, VoidCallback onTap) {
+  // ================= GRID ITEM =================
+  Widget _gridItem(
+      String asset,
+      String label,
+      double iconSize,
+      double iconPadding,
+      double fontSize,
+      VoidCallback onTap,
+      ) {
     return InkWell(
       onTap: onTap,
+      borderRadius: BorderRadius.circular(8),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           Container(
-            height: 60,
-            width: 60,
-            padding: const EdgeInsets.all(8),
+            height: iconSize,
+            width: iconSize,
+            padding: EdgeInsets.all(iconPadding),
             decoration: BoxDecoration(
               color: const Color(0xFF1B2B36),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Image.asset(asset, fit: BoxFit.contain),
           ),
-          const SizedBox(height: 6),
-          Text(
-            label,
-            textAlign: TextAlign.center,
-            style: const TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w500,
+          SizedBox(height: fontSize * 0.3),
+          Flexible(
+            child: Text(
+              label,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: fontSize,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ),
         ],
