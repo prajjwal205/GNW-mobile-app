@@ -41,7 +41,6 @@ class _LoginPageState extends ConsumerState<LoginPage> {
         );
       }
     }
-    // --- CHANGE ENDS HERE ---
   }
 
   @override
@@ -172,8 +171,6 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 
                   SizedBox(height: ResponsiveHelper.screenHeight(context) * 0.03),
 
-                  /// Sign in button
-                  // 7. Show Spinner if Loading, otherwise show Button
                   authState.isLoading
                       ? const CircularProgressIndicator()
                       : ElevatedButton(

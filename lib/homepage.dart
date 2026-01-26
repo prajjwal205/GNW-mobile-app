@@ -18,7 +18,6 @@ class _HomepageState extends State<Homepage> {
     final width = media.size.width;
     final height = media.size.height;
 
-    // ========= RESPONSIVE SCALES =========
     final horizontalPadding = width * 0.03;
     final verticalSpacing = height * 0.01;
 
@@ -28,7 +27,7 @@ class _HomepageState extends State<Homepage> {
     final iconBoxSize = width * 0.15;
     final iconPadding = iconBoxSize * 0.2;
 
-    final labelFontSize = (width * 0.035).clamp(11.0, 14.0);
+    final labelFontSize = (width * 0.030).clamp(11.0, 14.0);
     final bannerFontSize = width * 0.03;
 
     return FutureBuilder<String>(
@@ -46,7 +45,6 @@ class _HomepageState extends State<Homepage> {
             child: CustomScrollView(
               physics: const BouncingScrollPhysics(),
               slivers: [
-                // ================= SPONSOR + SEARCH =================
                 SliverToBoxAdapter(
                   child: Padding(
                     padding:
@@ -55,28 +53,29 @@ class _HomepageState extends State<Homepage> {
                       children: [
                         SizedBox(height: verticalSpacing),
 
-                        // Sponsor Banner
-                        Container(
-                          height: sponsorHeight *1.5,
-                          width: double.infinity,
-                          decoration: BoxDecoration(
-                            color: Colors.grey.shade300,
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          alignment: Alignment.center,
-                          child: Text(
-                            "SPONSOR\nBANNER",
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              fontSize: bannerFontSize,
-                              fontWeight: FontWeight.bold,
+                        AspectRatio(
+                          aspectRatio: 16 / 8, // 1920x1080
+                          child: Container(
+                            width: double.infinity,
+                            decoration: BoxDecoration(
+                              color: Colors.grey.shade300,
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            alignment: Alignment.center,
+                            child: Text(
+                              "SPONSOR\nBANNER",
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontSize: bannerFontSize,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                           ),
                         ),
 
+
                         SizedBox(height: verticalSpacing),
 
-                        // Search Bar
                         SizedBox(
                           height: searchHeight,
                           child: TextField(
@@ -102,7 +101,6 @@ class _HomepageState extends State<Homepage> {
                   ),
                 ),
 
-                // ================= CATEGORY GRID =================
                 SliverPadding(
                   padding:
                   EdgeInsets.symmetric(horizontal: horizontalPadding),
@@ -125,31 +123,35 @@ class _HomepageState extends State<Homepage> {
                     const SliverGridDelegateWithFixedCrossAxisCount(
                       crossAxisCount: 4,          // ✅ ALWAYS 4
                       crossAxisSpacing: 23, // helps to decrese the size between icons
-                      mainAxisSpacing: .01,
-                      childAspectRatio: 0.75,     // ✅ responsive height
+                      mainAxisSpacing: 5,   //.01 12
+                      childAspectRatio: 0.90,     // ✅ responsive height .75 &.90
                     ),
                   ),
                 ),
 
-                // ================= DEAL =================
                 SliverToBoxAdapter(
-                  child: Container(
-                    height: height * 0.07,
-                    margin: EdgeInsets.all(horizontalPadding),
-                    decoration: BoxDecoration(
-                      color: Colors.grey.shade300,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    alignment: Alignment.center,
-                    child: Text(
-                      "DEAL OF THE DAY",
-                      style: TextStyle(
-                        fontSize: bannerFontSize,
-                        fontWeight: FontWeight.bold,
+                  child: Padding(
+                    padding: EdgeInsets.all(horizontalPadding),
+                    child: AspectRatio(
+                      aspectRatio: 16 / 3, // 1920x360
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade300,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        alignment: Alignment.center,
+                        child: Text(
+                          "DEAL OF THE DAY",
+                          style: TextStyle(
+                            fontSize: bannerFontSize,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                       ),
                     ),
                   ),
                 ),
+
               ],
             ),
           ),
@@ -158,7 +160,6 @@ class _HomepageState extends State<Homepage> {
     );
   }
 
-  // ================= GRID ITEMS =================
   List<Widget> _gridItems(
       BuildContext context,
       double iconSize,
@@ -211,7 +212,6 @@ class _HomepageState extends State<Homepage> {
     ];
   }
 
-  // ================= GRID ITEM =================
   Widget _gridItem(
       String asset,
       String label,

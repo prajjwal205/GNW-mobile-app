@@ -22,7 +22,6 @@ class _ForgotPasswordPageState
   final _confirmPassController = TextEditingController();
 
   bool _otpSent = false;
-  bool _otpVerified = false;
   bool _loading = false;
   bool _success = false;
 
@@ -32,17 +31,16 @@ class _ForgotPasswordPageState
   final _border =
   OutlineInputBorder(borderRadius: BorderRadius.circular(8));
 
-  // ---------------- SEND OTP ----------------
+  //  SEND OTP
   Future<void> _sendOtp() async {
     setState(() {
       _loading = true;
       _message = null;
     });
 
-    final email = _emailController.text.trim();
-    final error =
-    await ref.read(authControllerProvider.notifier)
-        .generateOtp(email);
+    final error = await ref
+        .read(authControllerProvider.notifier)
+        .generateOtp(_emailController.text.trim());
 
     setState(() {
       _loading = false;
@@ -57,61 +55,30 @@ class _ForgotPasswordPageState
     });
   }
 
-  // ---------------- VERIFY OTP ----------------
-  Future<void> _verifyOtp() async {
-    setState(() {
-      _loading = true;
-      _message = null;
-    });
-
-    final otp =
-    _otpController.text.replaceAll(RegExp(r'\D'), '');
-    final email = _emailController.text.trim();
-
-    final error =
-    await ref.read(authControllerProvider.notifier)
-        .validateOtp(email, otp);
-
-    setState(() {
-      _loading = false;
-      if (error == null) {
-        _otpVerified = true;
-        _message = "OTP Verified";
-        _messageColor = Colors.green;
-      } else {
-        _message = error;
-        _messageColor = Colors.red;
-      }
-    });
-  }
-
-  // ---------------- RESET PASSWORD ----------------
   Future<void> _resetPassword() async {
     setState(() {
       _loading = true;
       _message = null;
     });
 
-    final email = _emailController.text.trim();
-    final newPass = _newPassController.text;
-    final confirmPass = _confirmPassController.text;
-
-    final error =
-    await ref.read(authControllerProvider.notifier)
-        .resetPassword(email, newPass, confirmPass);
+    final error = await ref
+        .read(authControllerProvider.notifier)
+        .resetPassword(
+      email: _emailController.text.trim(),
+      otp: _otpController.text.trim(),
+      newPass: _newPassController.text,
+      confirmPass: _confirmPassController.text,
+    );
 
     if (error == null) {
-      setState(() {
-        _success = true;
-      });
+      setState(() => _success = true);
 
-      // Auto redirect to Login
       Timer(const Duration(seconds: 2), () {
         if (mounted) {
           Navigator.pushAndRemoveUntil(
             context,
             MaterialPageRoute(builder: (_) => LoginPage()),
-                (route) => false,
+                (_) => false,
           );
         }
       });
@@ -140,9 +107,8 @@ class _ForgotPasswordPageState
             children: [
 
               Column(
-                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  SizedBox(height: 30,),
+                  const SizedBox(height: 30),
                   Image.asset(
                     "lib/images/GNW_RED_LOGO.png",
                     height: ResponsiveHelper.screenHeight(context) * 0.10,
@@ -154,7 +120,6 @@ class _ForgotPasswordPageState
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.bold,
-                      color: Colors.black,
                     ),
                     textAlign: TextAlign.center,
                   ),
@@ -174,7 +139,7 @@ class _ForgotPasswordPageState
 
               const SizedBox(height: 20),
 
-              // ---------------- ROW 1: EMAIL + SEND OTP ----------------
+              // EMAIL + SEND OTP
               Row(
                 children: [
                   Expanded(
@@ -211,43 +176,17 @@ class _ForgotPasswordPageState
 
               const SizedBox(height: 16),
 
-              // ---------------- ROW 2: OTP + VERIFY ----------------
+              // OTP FIELD
               if (_otpSent)
-                Row(
-                  children: [
-                    Expanded(
-                      child: TextField(
-                        controller: _otpController,
-                        keyboardType: TextInputType.number,
-                        maxLength: 4,
-                        decoration: InputDecoration(
-                          hintText: "Enter OTP",
-                          counterText: "",
-                          border: _border,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    SizedBox(
-                      height: 50,
-                      child: ElevatedButton(
-                        onPressed: _loading ? null : _verifyOtp,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.red,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                        ),
-                        child: const Text(
-                          "VERIFY",
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
+                TextField(
+                  controller: _otpController,
+                  keyboardType: TextInputType.number,
+                  maxLength: 4,
+                  decoration: InputDecoration(
+                    hintText: "Enter OTP",
+                    counterText: "",
+                    border: _border,
+                  ),
                 ),
 
               const SizedBox(height: 10),
@@ -263,56 +202,47 @@ class _ForgotPasswordPageState
 
               const SizedBox(height: 20),
 
-              // ---------------- PASSWORD SECTION ----------------
-              IgnorePointer(
-                ignoring: !_otpVerified,
-                child: Opacity(
-                  opacity: _otpVerified ? 1 : 0.4,
-                  child: Column(
-                    children: [
-                      TextField(
-                        controller: _newPassController,
-                        obscureText: true,
-                        decoration: InputDecoration(
-                          labelText: "New Password",
-                          border: _border,
+              if (_otpSent)
+                Column(
+                  children: [
+                    TextField(
+                      controller: _newPassController,
+                      obscureText: true,
+                      decoration: InputDecoration(
+                        labelText: "New Password",
+                        border: _border,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: _confirmPassController,
+                      obscureText: true,
+                      decoration: InputDecoration(
+                        labelText: "Confirm Password",
+                        border: _border,
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    ElevatedButton(
+                      onPressed: _loading ? null : _resetPassword,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.red,
+                        minimumSize:
+                        const Size(double.infinity, 50),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
                         ),
                       ),
-                      const SizedBox(height: 12),
-                      TextField(
-                        controller: _confirmPassController,
-                        obscureText: true,
-                        decoration: InputDecoration(
-                          labelText: "Confirm Password",
-                          border: _border,
+                      child: const Text(
+                        "RESET PASSWORD",
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
-                      const SizedBox(height: 20),
-                      ElevatedButton(
-                        onPressed:
-                        _otpVerified && !_loading
-                            ? _resetPassword
-                            : null,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.red,
-                          minimumSize:
-                          const Size(double.infinity, 50),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                        ),
-                        child: const Text(
-                          "RESET PASSWORD",
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
-              ),
             ],
           ),
         ),
@@ -320,7 +250,6 @@ class _ForgotPasswordPageState
     );
   }
 
-  // ---------------- SUCCESS SCREEN ----------------
   Widget _successScreen() {
     return Scaffold(
       body: Center(

@@ -19,7 +19,7 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   Future<void> _checkSession() async {
-    await Future.delayed(const Duration(seconds: 2)); // Show logo for 2s
+    await Future.delayed(const Duration(seconds: 2));
     final prefs = await SharedPreferences.getInstance();
 
     if (mounted) {
@@ -43,15 +43,12 @@ class _SplashScreenState extends State<SplashScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // Responsive Logo
             Image.asset(
               "lib/images/GNW_WHITE_LOGO.png",
               width: ResponsiveHelper.getIconSize(context, baseSize: 180),
               height: ResponsiveHelper.getIconSize(context, baseSize: 180),
             ),
-            // Responsive Spacing
             SizedBox(height: ResponsiveHelper.getSpacing(context, baseSpacing: 20)),
-            // Responsive Text
             Text(
               "No.1 Search Engine in Greater Noida West",
               textAlign: TextAlign.center,

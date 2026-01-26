@@ -22,7 +22,6 @@ class _SignupPageState extends ConsumerState<SignupPage> {
   bool _isPasswordVisible = false;
   bool _isConfirmVisible = false;
 
-  // Inside _SignupPageState class...
   InputDecoration _buildInputDecoration(String label) {
     return InputDecoration(
       label: RichText(
@@ -43,7 +42,6 @@ class _SignupPageState extends ConsumerState<SignupPage> {
   }
 
   void handleSignup() async {
-    // 1. Ask ViewModel to do the work
     final String? error = await ref.read(authControllerProvider.notifier).signup(
       name: _nameController.text.trim(),
       email: _emailController.text.trim(),
@@ -52,18 +50,13 @@ class _SignupPageState extends ConsumerState<SignupPage> {
       confirmPassword: _confirmController.text,
     );
 
-    // 2. Update UI based on ViewModel's answer
     if (mounted) {
       if (error == null) {
-        // --- SUCCESS: Show Animated Dialog ---
-
-        // Helper function to show the dialog
         Future<void> showSuccessDialog() async {
           await showDialog(
               context: context,
               barrierDismissible: false, // User cannot click outside to close
               builder: (ctx) {
-                // Auto-close the dialog after 2 seconds
                 Future.delayed(const Duration(seconds: 3), () {
                   if (ctx.mounted) {
                     Navigator.of(ctx).pop();
@@ -105,7 +98,6 @@ class _SignupPageState extends ConsumerState<SignupPage> {
                           },
                         ),
                         const SizedBox(height: 25),
-                        // Success Text
                         const Text(
                           "Success!",
                           style: TextStyle(
@@ -128,7 +120,6 @@ class _SignupPageState extends ConsumerState<SignupPage> {
           );
         }
 
-        // Await the dialog (it will close itself after 2 seconds)
         await showSuccessDialog();
 
         // After dialog closes, navigate back to Login page
@@ -137,7 +128,6 @@ class _SignupPageState extends ConsumerState<SignupPage> {
         }
 
       } else {
-        // --- FAILURE: Keep using SnackBar for errors ---
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(error), backgroundColor: Colors.red),
         );
@@ -212,7 +202,6 @@ class _SignupPageState extends ConsumerState<SignupPage> {
 
                   const SizedBox(height: 30),
 
-                  // Button controlled by ViewModel state
                   authState.isLoading
                       ? const CircularProgressIndicator(color: Colors.red)
                       : ElevatedButton(
