@@ -1,8 +1,12 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:gnw/Models/category_model.dart';
+import 'package:gnw/Models/doctor_model.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
-import '../login_signup page/login_model.dart';
+import 'package:gnw/Models/healthcare_model.dart';
+
+import '../Models/client_model.dart';
 
 class AuthService {
   static const String domain = "http://gnwbazaar-002-site2.qtempurl.com";
@@ -12,6 +16,10 @@ class AuthService {
   static const String signupUrl = "$domain/GNW_Signup";
   static const String generateOtpUrl = "$domain/GNW_GenerateOtp";
   static const String resetPassUrl = "$domain/GNW_ForgotPassword";
+  static const String categoryUrl = "$domain/GetAll_CategoryMaster";
+  static const String healthcareUrl = "$domain/GetAll_HealthCare_Category";
+  static const String clientUrl = "$domain/GetAll_Client";
+  static const String doctorUrl = "$domain/GetAll_Doctor";
 
   // 1. LOGIN Method
   Future<Map<String, dynamic>> login(String email, String password) async {
@@ -67,8 +75,14 @@ class AuthService {
       );
 
       if (response.statusCode == 200) {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('user_name', name);
+        await prefs.setString('user_email', email);
+        await prefs.setString('user_phone', phone);
+
         return {"success": true};
       }
+
 
       final data = jsonDecode(response.body);
       return {
@@ -105,6 +119,72 @@ class AuthService {
     }
   }
 
+
+
+  static Future<List<CategoryModel>> fetchCategories() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final String token = prefs.getString('auth_token') ?? '';
+
+      print("Using Token: $token");
+
+      final response = await http.get(
+        Uri.parse(categoryUrl),
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer $token",
+        },
+      );
+
+      print("Categories Status: ${response.statusCode}");
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        if (data['Value'] != null && data['Value'] is List) {
+          final list = data['Value'] as List;
+          return list.map((item) => CategoryModel.fromJson(item)).toList();
+        }
+      }
+      return [];
+    } catch (e) {
+      print("Error fetching categories: $e");
+      return [];
+    }
+  }
+
+  static Future<String> fetchUserName() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString('user_name') ?? "Prajjwal";
+  }
+
+
+
+  static Future<List<HealthcareCategoryModel>> fetchHealthcareCategories() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final String token = prefs.getString('auth_token') ?? '';
+
+      final response = await http.get(
+        Uri.parse(healthcareUrl),
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer $token",
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        if (data['Value'] != null && data['Value'] is List) {
+          final list = data['Value'] as List;
+          return list.map((item) => HealthcareCategoryModel.fromJson(item)).toList();
+        }
+      }
+      return [];
+    } catch (e) {
+      return [];
+    }
+  }
+
   // 4. RESET PASSWORD (OTP + NEW PASSWORD)
   Future<Map<String, dynamic>> resetPassword({
     required String email,
@@ -138,6 +218,69 @@ class AuthService {
     }
   }
 
+  static Future<List<ClientModel>> fetchAllClients() async {
+    try {
+      // 1. Get the Token
+      final prefs = await SharedPreferences.getInstance();
+      final String token = prefs.getString('auth_token') ?? '';
+
+      // 2. Send Request WITH Token
+      final response = await http.get(
+        Uri.parse(clientUrl),
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer $token", // <--- THIS IS CRITICAL
+        },
+      );
+
+      print("Client API Status: ${response.statusCode}"); // Debug Print
+      print("Client API Body: ${response.body}");         // Debug Print
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        if (data['Value'] != null && data['Value'] is List) {
+          final list = data['Value'] as List;
+          return list.map((item) => ClientModel.fromJson(item)).toList();
+        }
+      }
+      return [];
+    } catch (e) {
+      print("Error fetching clients: $e");
+      return [];
+    }
+  }
+
+
+  // fetch doctors
+
+  static Future<List<DoctorModel>> fetchDoctor() async{
+    try{
+      final prefs = await SharedPreferences.getInstance();
+      final String token = prefs.getString('auth_token')??'';
+
+      final response = await http.get(
+        Uri.parse(doctorUrl),
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer $token",
+        }
+      );
+      print("Doctor API status ${response.statusCode}");
+      if(response.statusCode == 200){
+        final data = jsonDecode(response.body);
+        if(data['Value'] != null && data['Value'] is List){
+          final List<dynamic> rawList = data['Value'];
+          return rawList.map((item)=> DoctorModel.fromJson(item)).toList();
+        }
+
+      }
+    return [];
+    }
+    catch (e) {
+    print("Error fetching doctors: $e");
+    return [];
+  }
+  }
 
 
   Future<void> logout() async {
@@ -195,6 +338,10 @@ class AuthController extends StateNotifier<AsyncValue<void>> {
 
     return result['success'] == true ? null : result['message'];
   }
+
+
+
+
 
   // RESET PASSWORD (OTP + PASSWORD)
   Future<String?> resetPassword({
