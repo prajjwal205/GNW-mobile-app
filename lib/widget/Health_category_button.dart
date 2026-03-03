@@ -53,7 +53,7 @@ class CategoryButton extends StatelessWidget {
                 title,
                 style: TextStyle(
                   color: Colors.black87, // Dark text for readability
-                  fontSize: 13,
+                  fontSize: (MediaQuery.of(context).size.width*.032).clamp(11.0,15.0),
                   fontWeight: FontWeight.w600,
                 ),
                 maxLines: 1,

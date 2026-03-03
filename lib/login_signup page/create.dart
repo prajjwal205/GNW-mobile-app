@@ -1,7 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../providers/auth_provider.dart'; // Go up 2 levels to find providers
+import '../../services/auth_provider.dart'; // Go up 2 levels to find providers
 import '../../utils/responsive_helper.dart';
 
 class SignupPage extends ConsumerStatefulWidget {

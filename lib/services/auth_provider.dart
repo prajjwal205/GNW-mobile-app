@@ -144,11 +144,13 @@ class AuthService {
           final list = data['Value'] as List;
           return list.map((item) => CategoryModel.fromJson(item)).toList();
         }
-      }
-      return [];
+        return [];
+        }
+        else {
+        throw Exception("Server Error: ${response.statusCode} - ${response.reasonPhrase}");        }
     } catch (e) {
       print("Error fetching categories: $e");
-      return [];
+      throw e;
     }
   }
 
@@ -268,10 +270,13 @@ class AuthService {
       print("Doctor API status ${response.statusCode}");
       if(response.statusCode == 200){
         final data = jsonDecode(response.body);
+        print(" Doctors list: ${response.body}");
+
         if(data['Value'] != null && data['Value'] is List){
           final List<dynamic> rawList = data['Value'];
           return rawList.map((item)=> DoctorModel.fromJson(item)).toList();
         }
+        print(" Doctors list: ${response.body}");
 
       }
     return [];

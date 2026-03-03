@@ -50,7 +50,7 @@ class _SplashScreenState extends State<SplashScreen> {
             ),
             SizedBox(height: ResponsiveHelper.getSpacing(context, baseSpacing: 20)),
             Text(
-              "No.1 Search Engine in Greater Noida West",
+              "No.1 Search App in\nGreater Noida West",
               textAlign: TextAlign.center,
               style: TextStyle(
                 color: Colors.white,

@@ -3,17 +3,20 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gnw/login_signup%20page/create.dart';
 import 'package:gnw/login_signup%20page/forgot_password.dart';
 import '../homepage.dart';
-import '../providers/auth_provider.dart';
+import '../services/auth_provider.dart';
 import '../utils/responsive_helper.dart';
 
 class LoginPage extends ConsumerStatefulWidget {
   @override
   _LoginPageState createState() => _LoginPageState();
+
 }
 
 class _LoginPageState extends ConsumerState<LoginPage> {
+  bool _isPasswordVisible = false;
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
+
 
   void handleLogin() async {
     String email = emailController.text.trim();
@@ -118,13 +121,25 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 
                   TextField(
                     controller: passwordController,
+                    obscureText: !_isPasswordVisible,
                     decoration: InputDecoration(
                       labelText: "Password",
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(30),
                       ),
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          _isPasswordVisible
+                              ? Icons.visibility
+                              : Icons.visibility_off,
+                        ),
+                        onPressed: () {
+                          setState(() {
+                            _isPasswordVisible = !_isPasswordVisible;
+                          });
+                        },
+                      ),
                     ),
-                    obscureText: true,
                   ),
 
                   Row(
