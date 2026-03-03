@@ -1,9 +1,14 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
-    package="com.example.gnw"> <uses-permission android:name="android.permission.INTERNET"/>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.example.gnw">
+
+    <uses-permission android:name="android.permission.INTERNET" />
+
+
     <application
-        android:label="gnw"
         android:name="${applicationName}"
-        android:icon="@mipmap/ic_launcher">
+        android:label="GNW Bazaar"
+        android:icon="@mipmap/ic_launcher"
+        android:usesCleartextTraffic="true">
         <activity
             android:name=".MainActivity"
             android:exported="true"
@@ -41,6 +46,8 @@
         <intent>
             <action android:name="android.intent.action.PROCESS_TEXT"/>
             <data android:mimeType="text/plain"/>
+            <data android:scheme="mailto" />
+
         </intent>
     </queries>
 </manifest>

@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../providers/auth_provider.dart';
+import '../../services/auth_provider.dart';
 import '../login_signup page/login.dart';
 import '../utils/responsive_helper.dart';
 

@@ -1,480 +1,314 @@
 import 'package:flutter/material.dart';
+import 'package:gnw/Models/healthcare_model.dart';
+import 'package:gnw/pages/doctor_details_page.dart';
+import 'package:gnw/services/auth_provider.dart';
 import '../widget/customAppBar.dart';
-import '../services/user_service.dart';
 import '../utils/responsive_helper.dart';
 
-class HealthcarePage extends StatelessWidget {
+class HealthcarePage extends StatefulWidget {
   const HealthcarePage({super.key});
 
-  // Each category button
-  Widget _buildCategoryButton(
-      BuildContext context,
-      {required String title,
-        required IconData icon,
-        required Color color,
-        required VoidCallback onTap}) {
-    return Expanded(
-      child: InkWell(
-        onTap: onTap,
-        child: Container(
-          margin: EdgeInsets.all(ResponsiveHelper.getSpacing(context, baseSpacing: 6)),
-          padding: EdgeInsets.symmetric(
-            vertical: ResponsiveHelper.getSpacing(context, baseSpacing: 12), 
-            horizontal: ResponsiveHelper.getSpacing(context, baseSpacing: 8)
-          ),
-          decoration: BoxDecoration(
-            color: color,
-            borderRadius: BorderRadius.circular(25),
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                icon, 
-                color: Colors.white, 
-                size: ResponsiveHelper.getIconSize(context, baseSize: 18)
-              ),
-              SizedBox(width: ResponsiveHelper.getSpacing(context, baseSpacing: 6)),
-              Flexible(
-                child: Text(
-                  title,
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: ResponsiveHelper.getFontSize(context, baseSize: 14),
-                    fontWeight: FontWeight.w600
-                  ),
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
+  @override
+  State<HealthcarePage> createState() => _HealthcarePageState();
+}
+
+class _HealthcarePageState extends State<HealthcarePage> {
+
+  late Future<String> _userNameFuture;
+  List<HealthcareCategoryModel> _allCategories = [];
+  List<HealthcareCategoryModel> _filteredCategories = [];
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _userNameFuture = AuthService.fetchUserName();
+    _loadCategories();
   }
+
+  Future<void> _loadCategories() async {
+    final list = await AuthService.fetchHealthcareCategories();
+    if (mounted) {
+      setState(() {
+        _allCategories = list;
+        _filteredCategories = list;
+        _isLoading = false;
+      });
+    }
+  }
+
+  List<List<HealthcareCategoryModel>> _chunkList(
+      List<HealthcareCategoryModel> list, int chunkSize) {
+    List<List<HealthcareCategoryModel>> chunks = [];
+    for (int i = 0; i < list.length; i += chunkSize) {
+      chunks.add(
+        list.sublist(
+          i,
+          i + chunkSize > list.length ? list.length : i + chunkSize,
+        ),
+      );
+    }
+    return chunks;
+  }
+
+  final List<Color> _colorPalette = [
+    Colors.red.shade200,
+    Colors.blue.shade200,
+    Colors.green.shade200,
+    Colors.orange.shade200,
+    Colors.purple.shade200,
+    Colors.teal.shade200,
+    Colors.pink.shade200,
+    Colors.indigo.shade200,
+    Colors.cyan.shade400,
+    Colors.deepOrange.shade400,
+    Colors.amber.shade200,
+    Colors.lightBlue.shade200,
+    Colors.lightGreen.shade200,
+    Colors.brown.shade400,
+    Colors.blueGrey.shade400,
+    Colors.deepPurple.shade400,
+  ];
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: buildCustomAppBar(context, UserService.userName, ResponsiveHelper.getAppBarHeight(context)),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: ResponsiveHelper.getPadding(context),
-          child: Column(
-            children: [
-              // Big Healthcare Icon Box
-              Container(
-                height: ResponsiveHelper.getContainerHeight(context, baseHeight: 140),
-                width: 130,
-                decoration: BoxDecoration(
-                  color: const Color(0xFF1B2B36),
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    SizedBox(
-                      height: ResponsiveHelper.getIconSize(context, baseSize: 70),
-                         child: Image.asset(
-                        "lib/images/MEDICARE.png", // <-- your PNG file path
-                        fit: BoxFit.contain,
+    final screenWidth = MediaQuery.of(context).size.width;
+
+    return FutureBuilder<String>(
+      future: _userNameFuture,
+      builder: (context, snapshot) {
+
+        String userName = snapshot.data ?? "";
+
+        return Scaffold(
+          backgroundColor: const Color(0xFFF5F7FA),
+          appBar: buildCustomAppBar(
+            context,
+            userName,
+            ResponsiveHelper.getAppBarHeight(context),
+          ),
+          body: _isLoading
+              ? const Center(child: CircularProgressIndicator())
+              : CustomScrollView(
+            slivers: [
+
+              // =======================
+              // 🔵 TOP BANNER
+              // =======================
+
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(16),
+                    child: AspectRatio(
+                      aspectRatio: 16 / 6,
+                      child: Stack(
+                        children: [
+                          Positioned.fill(
+                            child: Image.asset(
+                              "lib/images/image_21.png",
+                              fit: BoxFit.cover,
+                            ),
+                          ),
+                          Positioned(
+                            left: 20,
+                            top: 20,
+                            child: Text(
+                              "Find Your Specialist",
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize:
+                                (screenWidth * 0.05).clamp(16, 22),
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                    SizedBox(height: ResponsiveHelper.getSpacing(context, baseSpacing: 6)),
-                    Text(
-                      "Healthcare",
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: ResponsiveHelper.getFontSize(context, baseSize: 18),
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
-
               ),
-              SizedBox(height: ResponsiveHelper.getSpacing(context, baseSpacing: 15)),
 
-              // Buttons in Grid (2 per row)
-              Column(
-                children: [
-                                     Row(
-                     children: [
-                       _buildCategoryButton(
-                           context,
-                           title: "General Physician",
-                           icon: Icons.medical_services,
-                           color: Colors.lightBlue,
-                           onTap: () {
-                             ScaffoldMessenger.of(context).showSnackBar(
-                                 const SnackBar(content: Text("General Physician Clicked")));
-                           }),
-                       _buildCategoryButton(
-                           context,
-                           title: "Pediatrician",
-                           icon: Icons.child_care,
-                           color: Colors.purpleAccent,
-                           onTap: () {}),
-                     ],
-                   ),
-                                     Row(
-                     children: [
-                       _buildCategoryButton(
-                           context,
-                           title: "Gynecologist",
-                           icon: Icons.female,
-                           color: Colors.pink,
-                           onTap: () {}),
-                       _buildCategoryButton(
-                           context,
-                           title: "Cardiologist",
-                           icon: Icons.favorite,
-                           color: Colors.red,
-                           onTap: () {}),
-                     ],
-                   ),
-                  Row(
-                    children: [
-                                             _buildCategoryButton(
-                           context,
-                           title: "Orthopedic",
-                          icon: Icons.accessibility_new,
-                          color: Colors.orange,
-                          onTap: () {}),
-                                             _buildCategoryButton(
-                           context,
-                           title: "Dermatologist",
-                          icon: Icons.eco,
-                          color: Colors.green,
-                          onTap: () {}),
-                    ],
+              // =======================
+              // 🟢 CATEGORY CARDS
+              // =======================
+
+
+
+              SliverPadding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                sliver: SliverToBoxAdapter(
+                  child: Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(20),
+                      boxShadow: const [
+                        BoxShadow(
+                          color: Colors.black26,
+                          blurRadius: 8,
+                          offset: Offset(0, 4),
+                        )
+                      ],
+                    ),
+                    child: GridView.builder(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemCount: _filteredCategories.length,
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 2,
+                        crossAxisSpacing: 12,
+                        mainAxisSpacing: 12,
+                        childAspectRatio: 4,
+                      ),
+                      itemBuilder: (context, index) {
+                        final item = _filteredCategories[index];
+
+                        return InkWell(
+                          borderRadius: BorderRadius.circular(40),
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => DoctorListPage(
+                                  categoryName: item.category,
+                                  categoryId: item.id,
+                                ),
+                              ),
+                            );
+                          },
+                          child: Container(
+                            alignment: Alignment.center,
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(40),
+                              border: Border.all(
+                                color: _colorPalette[index % _colorPalette.length],
+                                width: 2,
+                              ),
+                            ),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 14,
+                              vertical: 6,
+                            ),
+                            child: Text(
+                              item.category,
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontSize: MediaQuery.of(context).size.width * 0.03,
+                                fontWeight: FontWeight.w700,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        );
+                      },
+                    ),
                   ),
-                  Row(
-                    children: [
-                                             _buildCategoryButton(
-                           context,
-                           title: "ENT Specialist",
-                          icon: Icons.hearing,
-                          color: Colors.teal,
-                          onTap: () {}),
-                                             _buildCategoryButton(
-                           context,
-                           title: "Neurologist",
-                          icon: Icons.psychology,
-                          color: Colors.deepPurple,
-                          onTap: () {}),
-                    ],
-                  ),
-                  Row(
-                    children: [
-                                             _buildCategoryButton(
-                           context,
-                           title: "Psychologist",
-                          icon: Icons.self_improvement,
-                          color: Colors.purple,
-                          onTap: () {}),
-                                             _buildCategoryButton(
-                           context,
-                           title: "Diagnostics",
-                          icon: Icons.science,
-                          color: Colors.deepOrange,
-                          onTap: () {}),
-                    ],
-                  ),
-                  Row(
-                    children: [
-                                             _buildCategoryButton(
-                           context,
-                           title: "Pharmacy",
-                          icon: Icons.local_pharmacy,
-                          color: Colors.teal,
-                          onTap: () {}),
-                                             _buildCategoryButton(
-                           context,
-                           title: "Dentist",
-                          icon: Icons.medical_services_outlined,
-                          color: Colors.cyan,
-                          onTap: () {}),
-                    ],
-                  ),
-                  Row(
-                    children: [
-                                             _buildCategoryButton(
-                           context,
-                           title: "Physiotherapy",
-                          icon: Icons.fitness_center,
-                          color: Colors.green,
-                          onTap: () {}),
-                                             _buildCategoryButton(
-                           context,
-                           title: "Eye Care",
-                          icon: Icons.remove_red_eye,
-                          color: Colors.blue,
-                          onTap: () {}),
-                    ],
-                  ),
-                  Row(
-                    children: [
-                                             _buildCategoryButton(
-                           context,
-                           title: "Ayurveda",
-                          icon: Icons.spa,
-                          color: Colors.pinkAccent,
-                          onTap: () {}),
-                                             _buildCategoryButton(
-                           context,
-                           title: "Homeopathy",
-                          icon: Icons.medication,
-                          color: Colors.redAccent,
-                          onTap: () {}),
-                    ],
-                  ),
-                  Row(
-                    children: [
-                                             _buildCategoryButton(
-                           context,
-                           title: "Yoga & Meditation",
-                          icon: Icons.self_improvement,
-                          color: Colors.pink,
-                          onTap: () {}),
-                                             _buildCategoryButton(
-                           context,
-                           title: "Dieticians",
-                          icon: Icons.apple,
-                          color: Colors.orange,
-                          onTap: () {}),
-                    ],
-                  ),
-                                     Row(
-                     children: [
-                                               _buildCategoryButton(
-                            context,
-                            title: "Weight Loss",
-                           icon: Icons.air,
-                           color: Colors.green,
-                           onTap: () {}),
-                                               _buildCategoryButton(
-                            context,
-                            title: "Ambulance",
-                           icon: Icons.local_hospital,
-                           color: Colors.teal,
-                           onTap: () {}),
-                     ],
-                   ),
-                   Row(
-                     children: [
-                                               _buildCategoryButton(
-                            context,
-                            title: "Blood Bank",
-                           icon: Icons.bloodtype,
-                           color: Colors.red,
-                           onTap: () {}),
-                                               _buildCategoryButton(
-                            context,
-                            title: "Elderly Care",
-                           icon: Icons.elderly,
-                           color: Colors.purple,
-                           onTap: () {}),
-                     ],
-                   ),
-                   Row(
-                     children: [
-                                               _buildCategoryButton(
-                            context,
-                            title: "Urology",
-                           icon: Icons.medical_information,
-                           color: Colors.blue,
-                           onTap: () {}),
-                                               _buildCategoryButton(
-                            context,
-                            title: "Neurology",
-                           icon: Icons.psychology,
-                           color: Colors.indigo,
-                           onTap: () {}),
-                     ],
-                   ),
-                   Row(
-                     children: [
-                                               _buildCategoryButton(
-                            context,
-                            title: "Nursing Staff",
-                           icon: Icons.medical_services,
-                           color: Colors.pink,
-                           onTap: () {}),
-                                               _buildCategoryButton(
-                            context,
-                            title: "IVF",
-                           icon: Icons.family_restroom,
-                           color: Colors.cyan,
-                           onTap: () {}),
-                     ],
-                   ),
-                   Row(
-                     children: [
-                                               _buildCategoryButton(
-                            context,
-                            title: "Oncology",
-                           icon: Icons.science,
-                           color: Colors.deepOrange,
-                           onTap: () {}),
-                                               _buildCategoryButton(
-                            context,
-                            title: "Nephrology",
-                           icon: Icons.water_drop,
-                           color: Colors.blueGrey,
-                           onTap: () {}),
-                     ],
-                   ),
-                   Row(
-                     children: [
-                                               _buildCategoryButton(
-                            context,
-                            title: "Vaccination",
-                           icon: Icons.vaccines,
-                           color: Colors.lightGreen,
-                           onTap: () {}),
-                                               _buildCategoryButton(
-                            context,
-                            title: "Medical Devices",
-                           icon: Icons.devices,
-                           color: Colors.grey,
-                           onTap: () {}),
-                     ],
-                   ),
-                   Row(
-                     children: [
-                                               _buildCategoryButton(
-                            context,
-                            title: "Emergency Care",
-                           icon: Icons.emergency,
-                           color: Colors.redAccent,
-                           onTap: () {}),
-                                               _buildCategoryButton(
-                            context,
-                            title: "Rehabilitation",
-                           icon: Icons.accessibility,
-                           color: Colors.orangeAccent,
-                           onTap: () {}),
-                     ],
-                   ),
-                   Row(
-                     children: [
-                                               _buildCategoryButton(
-                            context,
-                            title: "Mental Health",
-                           icon: Icons.psychology_alt,
-                           color: Colors.deepPurple,
-                           onTap: () {}),
-                                               _buildCategoryButton(
-                            context,
-                            title: "Alternative Medicine",
-                           icon: Icons.healing,
-                           color: Colors.tealAccent,
-                           onTap: () {}),
-                     ],
-                   ),
-                   Row(
-                     children: [
-                                               _buildCategoryButton(
-                            context,
-                            title: "Laboratory",
-                           icon: Icons.science_outlined,
-                           color: Colors.amber,
-                           onTap: () {}),
-                                               _buildCategoryButton(
-                            context,
-                            title: "Radiology",
-                           icon: Icons.radio,
-                           color: Colors.lightBlueAccent,
-                           onTap: () {}),
-                     ],
-                   ),
-                   Row(
-                     children: [
-                                               _buildCategoryButton(
-                            context,
-                            title: "Surgery",
-                           icon: Icons.medical_information_outlined,
-                           color: Colors.red,
-                           onTap: () {}),
-                                               _buildCategoryButton(
-                            context,
-                            title: "Palliative Care",
-                           icon: Icons.favorite_border,
-                           color: Colors.pinkAccent,
-                           onTap: () {}),
-                     ],
-                   ),
-                   Row(
-                     children: [
-                                               _buildCategoryButton(
-                            context,
-                            title: "Geriatrics",
-                           icon: Icons.elderly_woman,
-                           color: Colors.brown,
-                           onTap: () {}),
-                                               _buildCategoryButton(
-                            context,
-                            title: "Pediatric Surgery",
-                           icon: Icons.child_care_outlined,
-                           color: Colors.lightGreenAccent,
-                           onTap: () {}),
-                     ],
-                   ),
-                   Row(
-                     children: [
-                                               _buildCategoryButton(
-                            context,
-                            title: "Infectious Disease",
-                           icon: Icons.bug_report,
-                           color: Colors.orange,
-                           onTap: () {}),
-                                               _buildCategoryButton(
-                            context,
-                            title: "Endocrinology",
-                           icon: Icons.monitor_heart,
-                           color: Colors.purpleAccent,
-                           onTap: () {}),
-                     ],
-                   ),
-                   Row(
-                     children: [
-                                               _buildCategoryButton(
-                            context,
-                            title: "Gastroenterology",
-                                                        icon: Icons.medical_information,
-                           color: Colors.greenAccent,
-                           onTap: () {}),
-                                               _buildCategoryButton(
-                            context,
-                            title: "Pulmonology",
-                           icon: Icons.air,
-                           color: Colors.cyanAccent,
-                           onTap: () {}),
-                     ],
-                   ),
-                   Row(
-                     children: [
-                                               _buildCategoryButton(
-                            context,
-                            title: "Rheumatology",
-                           icon: Icons.accessibility_new_outlined,
-                           color: Colors.deepOrangeAccent,
-                           onTap: () {}),
-                                               _buildCategoryButton(
-                            context,
-                            title: "Hematology",
-                           icon: Icons.bloodtype_outlined,
-                           color: Colors.redAccent,
-                           onTap: () {}),
-                     ],
-                   ),
-                ],
+                ),
               ),
+
+
+              // SliverList(
+              //   delegate: SliverChildBuilderDelegate(
+              //         (context, cardIndex) {
+              //
+              //       final chunkedList =
+              //       _chunkList(_filteredCategories, 16);
+              //       final currentChunk =
+              //       chunkedList[cardIndex];
+              //
+              //       return Container(
+              //         margin: const EdgeInsets.symmetric(
+              //             horizontal: 16, vertical: 10),
+              //         padding: const EdgeInsets.all(16),
+              //         decoration: BoxDecoration(
+              //           color: Colors.white,
+              //           borderRadius: BorderRadius.circular(20),
+              //
+              //           boxShadow: const [
+              //             BoxShadow(
+              //               color: Colors.black,
+              //               blurRadius: 8,
+              //               offset: Offset(0, 4),
+              //             )
+              //           ],
+              //         ),
+              //         child: GridView.builder(
+              //           shrinkWrap: true,
+              //           physics:
+              //           const NeverScrollableScrollPhysics(),
+              //           itemCount: currentChunk.length,
+              //           gridDelegate:
+              //           const SliverGridDelegateWithFixedCrossAxisCount(
+              //             crossAxisCount: 2,
+              //             crossAxisSpacing: 12,
+              //             mainAxisSpacing: 12,
+              //             childAspectRatio: 4,
+              //           ),
+              //           itemBuilder: (context, index) {
+              //
+              //             final item =
+              //             currentChunk[index];
+              //
+              //             return InkWell(
+              //               borderRadius: BorderRadius.circular(40),
+              //               onTap: () {
+              //                 Navigator.push(
+              //                   context,
+              //                   MaterialPageRoute(
+              //                     builder: (context) => DoctorDetailsPage(
+              //                       categoryName: item.category,
+              //                       categoryId: item.id,
+              //                     ),
+              //                   ),
+              //                 );
+              //               },
+              //               child: Container(
+              //                 alignment: Alignment.center,
+              //                 decoration: BoxDecoration(
+              //                   color: Colors.white,
+              //                   borderRadius: BorderRadius.circular(40),
+              //                   border: Border.all(
+              //                     color: _colorPalette[index % _colorPalette.length], // ✅ Colorful border
+              //                     width: 2,
+              //                   ),
+              //
+              //                 ),
+              //                 padding: const EdgeInsets.symmetric(
+              //                   horizontal: 14,
+              //                   vertical: 6, // 🔥 very small vertical padding
+              //                 ),
+              //                 child: Text(
+              //                   item.category,
+              //                   textAlign: TextAlign.center,
+              //                   style: TextStyle(
+              //                     fontSize: (MediaQuery.of(context).size.width * 0.030)
+              //                         ,
+              //                     fontWeight: FontWeight.w700,
+              //                     color: Colors.black,
+              //                   ),
+              //                   maxLines: 1,
+              //                   overflow: TextOverflow.ellipsis,
+              //                 ),
+              //               ),
+              //             );
+              //           },
+              //         ),
+              //       );
+              //     },
+              //     childCount:
+              //     _chunkList(_filteredCategories, 16)
+              //         .length,
+              //   ),
+              // ),
             ],
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 }

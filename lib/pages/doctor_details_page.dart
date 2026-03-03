@@ -1,0 +1,334 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:gnw/Models/doctor_model.dart';
+import 'package:gnw/services/auth_provider.dart';
+import '../widget/customAppBar.dart';
+import '../utils/responsive_helper.dart';
+
+// ============================================================================
+// 1. RIVERPOD PROVIDERS
+// ============================================================================
+
+final userNameProvider = FutureProvider.autoDispose<String>((ref) async {
+  return await AuthService.fetchUserName();
+});
+
+final doctorListProvider = FutureProvider.family.autoDispose<List<DoctorModel>, int>((ref, categoryId) async {
+  final allDoctors = await AuthService.fetchDoctor();
+  return allDoctors.where((doc) => doc.categoryId == categoryId).toList();
+});
+
+// ============================================================================
+// 2. DOCTOR LIST PAGE
+// ============================================================================
+
+class DoctorListPage extends ConsumerWidget {
+  final String categoryName;
+  final int categoryId;
+
+  const DoctorListPage({
+    super.key,
+    required this.categoryName,
+    required this.categoryId,
+  });
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final userAsync = ref.watch(userNameProvider);
+    final doctorAsync = ref.watch(doctorListProvider(categoryId));
+    final String userName = userAsync.value ?? "User";
+
+    // 1. CRITICAL FIX: Lock the text scaling so the client's huge OS font doesn't break the app
+    return MediaQuery(
+      data: MediaQuery.of(context).copyWith(
+        textScaler: const TextScaler.linear(1.0),
+      ),
+      child: Scaffold(
+        backgroundColor: Colors.white,
+        appBar: buildCustomAppBar(
+          context,
+          userName,
+          ResponsiveHelper.getAppBarHeight(context),
+        ),
+        body: doctorAsync.when(
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (error, stack) => Center(child: Text('Error: $error')),
+          data: (doctorList) {
+            if (doctorList.isEmpty) {
+              return Center(
+                child: Text(
+                  "No Doctors/Hospitals Found in $categoryName",
+                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+              );
+            }
+
+            return ListView.separated(
+              padding: const EdgeInsets.only(top: 8, bottom: 20),
+              itemCount: doctorList.length,
+              separatorBuilder: (context, index) => Container(
+                height: 12, // The divider between doctors
+                color: Colors.grey.shade200,
+              ),
+              itemBuilder: (context, index) {
+                final doctor = doctorList[index];
+                return DoctorDetailBlock(doctor: doctor);
+              },
+            );
+          },
+        ),
+      ),
+    );
+  }
+}
+
+// ============================================================================
+// 3. DOCTOR DETAIL BLOCK (Fully Responsive)
+// ============================================================================
+
+class DoctorDetailBlock extends StatelessWidget {
+  final DoctorModel doctor;
+
+  const DoctorDetailBlock({super.key, required this.doctor});
+
+  Future<void> _callNumber(BuildContext context, String number) async {
+    if (number.isEmpty) return;
+    final Uri uri = Uri(scheme: 'tel', path: number);
+    if (!await launchUrl(uri)) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Could not call $number")));
+    }
+  }
+
+  Future<void> _openWhatsapp(BuildContext context, String number) async {
+    if (number.isEmpty) return;
+    String formatted = number.replaceAll(" ", "").replaceAll("+91", "");
+    final Uri uri = Uri.parse("https://wa.me/91$formatted");
+    if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Could not open WhatsApp")));
+    }
+  }
+
+  Future<void> _openMap(BuildContext context, String address) async {
+    if (address.isEmpty) return;
+    final Uri uri = Uri.parse("https://www.google.com/maps/search/?api=1&query=${Uri.encodeComponent(address)}");
+    if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Could not open Maps")));
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // 2. CRITICAL FIX: Calculate scale multiplier based on screen width
+    double width = MediaQuery.of(context).size.width;
+    // We assume 390 is a standard medium phone width. Everything scales from this.
+    double wScale = width / 390.0;
+
+    // Dynamic Fonts
+    double titleFont = 22 * wScale;
+    double subtitleFont = 14 * wScale;
+    double smallFont = 11 * wScale;
+    double tinyFont = 10 * wScale;
+
+    // Dynamic Spacing
+    double spaceSmall = 8 * wScale;
+    double spaceMed = 12 * wScale;
+    double spaceLarge = 16 * wScale;
+
+    final imageProvider = (doctor.clinicImage != null && doctor.clinicImage!.isNotEmpty)
+        ? NetworkImage(doctor.clinicImage!)
+        : (doctor.doctorImage != null && doctor.doctorImage!.isNotEmpty)
+        ? NetworkImage(doctor.doctorImage!)
+        : const AssetImage('lib/images/baby.jpeg') as ImageProvider;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // ==============================
+        // 1. POSTER IMAGE SECTION
+        // ==============================
+        Container(
+          margin: EdgeInsets.only(left: spaceMed, right: spaceMed, top: spaceMed, bottom: spaceSmall),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(14 * wScale),
+            border: Border.all(color: Colors.grey.shade300),
+            boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.08), blurRadius: 6, offset: const Offset(0, 3))],
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(14 * wScale),
+            child: Column(
+              children: [
+                Container(
+                  color: Colors.white,
+                  child: Image(
+                    image: imageProvider,
+                    width: double.infinity,
+                    fit: BoxFit.fitWidth,
+                    errorBuilder: (c, o, s) => Container(height: 250 * wScale, color: Colors.grey[200], child: Icon(Icons.local_hospital, size: 50 * wScale)),
+                  ),
+                ),
+                Container(
+                  width: double.infinity,
+                  padding: EdgeInsets.symmetric(vertical: spaceSmall, horizontal: 10 * wScale),
+                  decoration: const BoxDecoration(
+                    gradient: LinearGradient(colors: [Color(0xFF6A1B9A), Color(0xFFD81B60)]),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        "Book your\nAppointment today!",
+                        style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: smallFont),
+                      ),
+                      InkWell(
+                        onTap: () => _callNumber(context, doctor.phoneNumber),
+                        child: Container(
+                          padding: EdgeInsets.symmetric(horizontal: spaceSmall, vertical: 4 * wScale),
+                          decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20 * wScale)),
+                          child: Row(
+                            children: [
+                              Icon(Icons.call, size: 12 * wScale, color: const Color(0xFFD81B60)),
+                              SizedBox(width: 4 * wScale),
+                              Text(
+                                doctor.phoneNumber,
+                                style: TextStyle(color: const Color(0xFFD81B60), fontWeight: FontWeight.bold, fontSize: tinyFont),
+                              ),
+                            ],
+                          ),
+                        ),
+                      )
+                    ],
+                  ),
+                ),
+                Container(
+                  width: double.infinity,
+                  padding: EdgeInsets.symmetric(vertical: 4 * wScale, horizontal: 10 * wScale),
+                  color: const Color(0xFFD81B60),
+                  child: Row(
+                    children: [
+                      Icon(Icons.email, color: Colors.white, size: 10 * wScale),
+                      SizedBox(width: 4 * wScale),
+                      Expanded(child: Text(doctor.email, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: Colors.white, fontSize: tinyFont))),
+                      Icon(Icons.location_on, color: Colors.white, size: 10 * wScale),
+                      SizedBox(width: 4 * wScale),
+                      Expanded(child: Text(doctor.location, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: Colors.white, fontSize: tinyFont))),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+
+        // ==============================
+        // 2. TITLE & WHATSAPP ICON
+        // ==============================
+        Padding(
+          padding: EdgeInsets.symmetric(horizontal: spaceLarge),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Text(
+                  doctor.name,
+                  style: TextStyle(fontSize: titleFont, fontWeight: FontWeight.bold, height: 1.2),
+                ),
+              ),
+              SizedBox(width: spaceMed),
+              GestureDetector(
+                onTap: () => _openWhatsapp(context, doctor.whatsappNumber.isNotEmpty ? doctor.whatsappNumber : doctor.phoneNumber),
+                child: SvgPicture.asset(
+                  "lib/icons/whatsapp.svg",
+                  height: 38 * wScale,
+                  width: 38 * wScale,
+                ),
+              ),
+            ],
+          ),
+        ),
+
+        SizedBox(height: 10 * wScale),
+
+        // ==============================
+        // 3. ADDRESS SECTION
+        // ==============================
+        Padding(
+          padding: EdgeInsets.symmetric(horizontal: spaceLarge),
+          child: Row(
+            children: [
+              GestureDetector(
+                onTap: () => _openMap(context, doctor.address),
+                child: Container(
+                  height: 36 * wScale, width: 36 * wScale,
+                  decoration: BoxDecoration(color: const Color(0xFF263238), borderRadius: BorderRadius.circular(8 * wScale)),
+                  child: Icon(Icons.navigation, color: Colors.white, size: 20 * wScale),
+                ),
+              ),
+              SizedBox(width: 10 * wScale),
+              Expanded(
+                child: Text(
+                  doctor.address,
+                  style: TextStyle(fontSize: subtitleFont, color: Colors.grey[800], fontWeight: FontWeight.w600),
+                ),
+              ),
+            ],
+          ),
+        ),
+
+        SizedBox(height: spaceMed),
+
+        // ==============================
+        // 4. CALL BUTTON
+        // ==============================
+        GestureDetector(
+          onTap: () => _callNumber(context, doctor.phoneNumber),
+          child: Container(
+            margin: EdgeInsets.symmetric(horizontal: spaceLarge),
+            width: double.infinity,
+            padding: EdgeInsets.symmetric(vertical: spaceSmall),
+            decoration: BoxDecoration(
+              color: const Color(0xFFFFA726),
+              borderRadius: BorderRadius.circular(30 * wScale),
+              border: Border.all(color: Colors.black, width: 1.3),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text("CALL", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15 * wScale)),
+                SizedBox(width: 10 * wScale),
+                Container(width: 1, height: 16 * wScale, color: Colors.black),
+                SizedBox(width: 10 * wScale),
+                Text(doctor.phoneNumber, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15 * wScale)),
+              ],
+            ),
+          ),
+        ),
+
+        SizedBox(height: spaceMed),
+
+        // ==============================
+        // 5. HIGHLIGHTS TITLE & TEXT
+        // ==============================
+        Container(
+          margin: EdgeInsets.symmetric(horizontal: spaceLarge),
+          width: double.infinity,
+          padding: EdgeInsets.symmetric(vertical: 6 * wScale),
+          decoration: BoxDecoration(color: const Color(0xFFFFA726), borderRadius: BorderRadius.circular(30 * wScale)),
+          alignment: Alignment.center,
+          child: Text("HIGHLIGHTS", style: TextStyle(fontWeight: FontWeight.bold, fontSize: subtitleFont)),
+        ),
+
+        Padding(
+          padding: EdgeInsets.only(left: spaceLarge, right: spaceLarge, top: 10 * wScale, bottom: spaceLarge),
+          child: Text(
+            doctor.aboutDoctor.isNotEmpty ? doctor.aboutDoctor : "No details available.",
+            textAlign: TextAlign.justify,
+            style: TextStyle(fontSize: subtitleFont, height: 1.4, color: Colors.black87),
+          ),
+        ),
+      ],
+    );
+  }
+}
