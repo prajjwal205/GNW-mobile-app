@@ -6,8 +6,6 @@ import 'package:gnw/pages/client_list_page.dart';
 import 'package:gnw/services/auth_provider.dart';
 import 'package:gnw/widget/customAppBar.dart';
 
-
-// Fetches the User Name
 final userNameProvider = FutureProvider.autoDispose<String>((ref) async {
   return await AuthService.fetchUserName();
 });
@@ -15,6 +13,7 @@ final userNameProvider = FutureProvider.autoDispose<String>((ref) async {
 // Fetches the Categories List
 final categoriesProvider = FutureProvider.autoDispose<List<CategoryModel>>((ref) async {
   return await AuthService.fetchCategories();
+
 });
 
 class Homepage extends ConsumerStatefulWidget {

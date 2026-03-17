@@ -1,7 +1,6 @@
 class DoctorModel {
   final int id;
   final String name;
-  final int categoryId; // renamed properly
   final String qualification;
   final String aboutDoctor;
   final String email;
@@ -13,11 +12,12 @@ class DoctorModel {
   final String? doctorImage;
   final String? clinicImage;
   final bool isActive;
+  final List<int> categoryIds;
 
   DoctorModel({
     required this.id,
     required this.name,
-    required this.categoryId,
+    required this.categoryIds,
     required this.qualification,
     required this.aboutDoctor,
     required this.email,
@@ -35,7 +35,6 @@ class DoctorModel {
     return DoctorModel(
       id: json["Id"] ?? 0,
       name: json["DoctorName"] ?? "Unknown Doctor",
-      categoryId: json["HealthCareCategoryId"] ?? 0,
       qualification: json["Qualification"] ?? "",
       aboutDoctor: json["AboutDoctor"] ?? "",
       email: json["Email"] ?? "",
@@ -44,6 +43,11 @@ class DoctorModel {
       experience: json["Experience"] ?? 0,
       phoneNumber: json["Phonenumber"] ?? "",
       whatsappNumber: json["WhatsAppNumber"] ?? "",
+
+      categoryIds: (json["HealthCareCategoryIds"] as List?)
+          ?.map((e) => e as int)
+          .toList() ??
+          [],
       doctorImage: (json["DoctorImagePath"] != null &&
           json["DoctorImagePath"].toString().isNotEmpty)
           ? _convertToImageUrl(json["DoctorImagePath"])
@@ -53,6 +57,7 @@ class DoctorModel {
           ? _convertToImageUrl(json["ClinicImagePath"])
           : null,
       isActive: json["IsActive"] ?? false,
+
     );
   }
 
