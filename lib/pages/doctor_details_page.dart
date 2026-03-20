@@ -97,12 +97,15 @@ class DoctorDetailBlock extends StatelessWidget {
     }
   }
 
-  Future<void> _openWhatsapp(BuildContext context, String number) async {
+  Future<void> _openWhatsapp(BuildContext context, String number, {String message=" "}) async {
     if (number.isEmpty) return;
     String formatted = number.replaceAll(" ", "").replaceAll("+91", "");
-    final Uri uri = Uri.parse("https://wa.me/91$formatted");
+    String encodedMessage = Uri.encodeComponent(message);
+    final Uri uri = Uri.parse("https://wa.me/91$formatted?text=$encodedMessage");
     if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Could not open WhatsApp")));
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Could not open WhatsApp")));
+      }
     }
   }
 
@@ -232,7 +235,11 @@ class DoctorDetailBlock extends StatelessWidget {
               ),
               SizedBox(width: spaceMed),
               GestureDetector(
-                onTap: () => _openWhatsapp(context, doctor.whatsappNumber.isNotEmpty ? doctor.whatsappNumber : doctor.phoneNumber),
+                onTap: () => _openWhatsapp(
+                    context,
+                    doctor.whatsappNumber.isNotEmpty ? doctor.whatsappNumber : doctor.phoneNumber,
+                  message: "Hi *${doctor.name}*, I found your business on GNW Bazaar. I would like to know more details.",
+                ),
                 child: SvgPicture.asset(
                   "lib/icons/whatsapp.svg",
                   height: 38 * wScale,

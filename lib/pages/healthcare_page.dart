@@ -186,7 +186,7 @@ class _HealthcarePageState extends State<HealthcarePage> {
                               borderRadius: BorderRadius.circular(40),
                               border: Border.all(
                                 color: _colorPalette[index % _colorPalette.length],
-                                width: 2,
+                                width: 1,
                               ),
                             ),
                             padding: const EdgeInsets.symmetric(
