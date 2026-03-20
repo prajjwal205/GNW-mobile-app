@@ -5,9 +5,8 @@ import 'package:gnw/pages/healthcare_page.dart';
 import 'package:gnw/pages/client_list_page.dart';
 import 'package:gnw/services/auth_provider.dart';
 import 'package:gnw/widget/customAppBar.dart';
+import 'package:gnw/pages/live_search_page.dart'; // Make sure the path matches where you saved it!
 
-
-// Fetches the User Name
 final userNameProvider = FutureProvider.autoDispose<String>((ref) async {
   return await AuthService.fetchUserName();
 });
@@ -15,6 +14,7 @@ final userNameProvider = FutureProvider.autoDispose<String>((ref) async {
 // Fetches the Categories List
 final categoriesProvider = FutureProvider.autoDispose<List<CategoryModel>>((ref) async {
   return await AuthService.fetchCategories();
+
 });
 
 class Homepage extends ConsumerStatefulWidget {
@@ -103,6 +103,7 @@ class _HomepageState extends ConsumerState<Homepage> {
     return MediaQuery(
       data: MediaQuery.of(context).copyWith(textScaler: TextScaler.noScaling),
       child: Scaffold(
+        backgroundColor: Colors.white,
         // AppBar handles the User Name state
         appBar: userAsync.when(
           data: (name) => buildCustomAppBar(context, name, 90),
@@ -145,14 +146,43 @@ class _HomepageState extends ConsumerState<Homepage> {
                         SizedBox(height: verticalSpacing),
                         // Search
                         SizedBox(
-                          height: height * 0.055,
+                          height: height * 0.05,
                           child: TextField(
+                            readOnly: true, // Prevents keyboard from opening on the homepage
+                            onTap: () {
+                              // Instantly open the new Live Search page
+                              Navigator.push(
+                                context,
+                                PageRouteBuilder(
+                                  pageBuilder: (_, __, ___) => const LiveSearchPage(),
+                                  transitionDuration: Duration.zero,
+                                  reverseTransitionDuration: Duration.zero,
+                                ),
+                              );
+                            },
                             style: TextStyle(fontSize: labelFontSize * 1.5),
                             decoration: InputDecoration(
-                              hintText: "Search...",
-                              prefixIcon: Icon(Icons.search, size: labelFontSize * 2.5),
-                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(25)),
+                              hintText: "Search",
+                              prefixIcon: Icon(Icons.search, size: labelFontSize * 2.0, color: Colors.black87),
+
+                              // 1. Base Border
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(25),
+                                borderSide: const BorderSide(color: Colors.black),
+                              ),
+
+                              // 2. Border when resting (This fixes the purple issue!)
+
+
+                              // 3. Border when tapped
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(25),
+                                borderSide: const BorderSide(color: Colors.black, width: 1),
+                              ),
+
                               isDense: true,
+                              fillColor: Colors.white,
+                              filled: true,
                             ),
                           ),
                         ),
@@ -265,7 +295,12 @@ class _HomepageState extends ConsumerState<Homepage> {
                 // --- BOTTOM BANNER ---
                 SliverToBoxAdapter(
                   child: Padding(
-                    padding: EdgeInsets.all(horizontalPadding),
+                    padding: EdgeInsets.only(
+                    left: horizontalPadding,
+                    right: horizontalPadding,
+                    bottom: horizontalPadding,
+                      top: 0,
+                    ),
                     child: AspectRatio(
                       aspectRatio: 16 / 3,
                       child: Container(

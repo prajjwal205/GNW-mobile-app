@@ -7,9 +7,6 @@ import 'package:gnw/services/auth_provider.dart';
 import '../widget/customAppBar.dart';
 import '../utils/responsive_helper.dart';
 
-// ============================================================================
-// 1. RIVERPOD PROVIDERS
-// ============================================================================
 
 final userNameProvider = FutureProvider.autoDispose<String>((ref) async {
   return await AuthService.fetchUserName();
@@ -17,12 +14,11 @@ final userNameProvider = FutureProvider.autoDispose<String>((ref) async {
 
 final doctorListProvider = FutureProvider.family.autoDispose<List<DoctorModel>, int>((ref, categoryId) async {
   final allDoctors = await AuthService.fetchDoctor();
-  return allDoctors.where((doc) => doc.categoryId == categoryId).toList();
-});
+  return allDoctors
+      .where((doc) => doc.categoryIds.contains(categoryId))
+      .toList();});
 
-// ============================================================================
 // 2. DOCTOR LIST PAGE
-// ============================================================================
 
 class DoctorListPage extends ConsumerWidget {
   final String categoryName;
@@ -59,14 +55,16 @@ class DoctorListPage extends ConsumerWidget {
             if (doctorList.isEmpty) {
               return Center(
                 child: Text(
-                  "No Doctors/Hospitals Found in $categoryName",
-                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  "No Doctors Added in  $categoryName",
+                  style: const TextStyle(
+                      fontSize: 15,
+                      color: Colors.red),
                 ),
               );
             }
 
             return ListView.separated(
-              padding: const EdgeInsets.only(top: 8, bottom: 20),
+              padding: const EdgeInsets.only(top: 0, bottom: 20),
               itemCount: doctorList.length,
               separatorBuilder: (context, index) => Container(
                 height: 12, // The divider between doctors
@@ -84,9 +82,7 @@ class DoctorListPage extends ConsumerWidget {
   }
 }
 
-// ============================================================================
 // 3. DOCTOR DETAIL BLOCK (Fully Responsive)
-// ============================================================================
 
 class DoctorDetailBlock extends StatelessWidget {
   final DoctorModel doctor;
@@ -101,12 +97,15 @@ class DoctorDetailBlock extends StatelessWidget {
     }
   }
 
-  Future<void> _openWhatsapp(BuildContext context, String number) async {
+  Future<void> _openWhatsapp(BuildContext context, String number, {String message=" "}) async {
     if (number.isEmpty) return;
     String formatted = number.replaceAll(" ", "").replaceAll("+91", "");
-    final Uri uri = Uri.parse("https://wa.me/91$formatted");
+    String encodedMessage = Uri.encodeComponent(message);
+    final Uri uri = Uri.parse("https://wa.me/91$formatted?text=$encodedMessage");
     if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Could not open WhatsApp")));
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Could not open WhatsApp")));
+      }
     }
   }
 
@@ -126,13 +125,13 @@ class DoctorDetailBlock extends StatelessWidget {
     double wScale = width / 390.0;
 
     // Dynamic Fonts
-    double titleFont = 22 * wScale;
-    double subtitleFont = 14 * wScale;
+    double titleFont = 20 * wScale;
+    double subtitleFont = 13 * wScale;
     double smallFont = 11 * wScale;
     double tinyFont = 10 * wScale;
 
     // Dynamic Spacing
-    double spaceSmall = 8 * wScale;
+    double spaceSmall = 6 * wScale;
     double spaceMed = 12 * wScale;
     double spaceLarge = 16 * wScale;
 
@@ -140,14 +139,12 @@ class DoctorDetailBlock extends StatelessWidget {
         ? NetworkImage(doctor.clinicImage!)
         : (doctor.doctorImage != null && doctor.doctorImage!.isNotEmpty)
         ? NetworkImage(doctor.doctorImage!)
-        : const AssetImage('lib/images/baby.jpeg') as ImageProvider;
+        : const AssetImage('lib/images/sample.jpeg') as ImageProvider;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // ==============================
         // 1. POSTER IMAGE SECTION
-        // ==============================
         Container(
           margin: EdgeInsets.only(left: spaceMed, right: spaceMed, top: spaceMed, bottom: spaceSmall),
           decoration: BoxDecoration(
@@ -168,54 +165,54 @@ class DoctorDetailBlock extends StatelessWidget {
                     errorBuilder: (c, o, s) => Container(height: 250 * wScale, color: Colors.grey[200], child: Icon(Icons.local_hospital, size: 50 * wScale)),
                   ),
                 ),
-                Container(
-                  width: double.infinity,
-                  padding: EdgeInsets.symmetric(vertical: spaceSmall, horizontal: 10 * wScale),
-                  decoration: const BoxDecoration(
-                    gradient: LinearGradient(colors: [Color(0xFF6A1B9A), Color(0xFFD81B60)]),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        "Book your\nAppointment today!",
-                        style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: smallFont),
-                      ),
-                      InkWell(
-                        onTap: () => _callNumber(context, doctor.phoneNumber),
-                        child: Container(
-                          padding: EdgeInsets.symmetric(horizontal: spaceSmall, vertical: 4 * wScale),
-                          decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20 * wScale)),
-                          child: Row(
-                            children: [
-                              Icon(Icons.call, size: 12 * wScale, color: const Color(0xFFD81B60)),
-                              SizedBox(width: 4 * wScale),
-                              Text(
-                                doctor.phoneNumber,
-                                style: TextStyle(color: const Color(0xFFD81B60), fontWeight: FontWeight.bold, fontSize: tinyFont),
-                              ),
-                            ],
-                          ),
-                        ),
-                      )
-                    ],
-                  ),
-                ),
-                Container(
-                  width: double.infinity,
-                  padding: EdgeInsets.symmetric(vertical: 4 * wScale, horizontal: 10 * wScale),
-                  color: const Color(0xFFD81B60),
-                  child: Row(
-                    children: [
-                      Icon(Icons.email, color: Colors.white, size: 10 * wScale),
-                      SizedBox(width: 4 * wScale),
-                      Expanded(child: Text(doctor.email, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: Colors.white, fontSize: tinyFont))),
-                      Icon(Icons.location_on, color: Colors.white, size: 10 * wScale),
-                      SizedBox(width: 4 * wScale),
-                      Expanded(child: Text(doctor.location, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: Colors.white, fontSize: tinyFont))),
-                    ],
-                  ),
-                ),
+                // Container(
+                //   width: double.infinity,
+                //   padding: EdgeInsets.symmetric(vertical: spaceSmall, horizontal: 10 * wScale),
+                //   decoration: const BoxDecoration(
+                //     gradient: LinearGradient(colors: [Color(0xFF6A1B9A), Color(0xFFD81B60)]),
+                //   ),
+                //   child: Row(
+                //     mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                //     children: [
+                //       Text(
+                //         "Book your\nAppointment today!",
+                //         style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: smallFont),
+                //       ),
+                //       InkWell(
+                //         onTap: () => _callNumber(context, doctor.phoneNumber),
+                //         child: Container(
+                //           padding: EdgeInsets.symmetric(horizontal: spaceSmall, vertical: 4 * wScale),
+                //           decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20 * wScale)),
+                //           child: Row(
+                //             children: [
+                //               Icon(Icons.call, size: 12 * wScale, color: const Color(0xFFD81B60)),
+                //               SizedBox(width: 4 * wScale),
+                //               Text(
+                //                 doctor.phoneNumber,
+                //                 style: TextStyle(color: const Color(0xFFD81B60), fontWeight: FontWeight.bold, fontSize: tinyFont),
+                //               ),
+                //             ],
+                //           ),
+                //         ),
+                //       )
+                //     ],
+                //   ),
+                // ),
+                // Container(
+                //   width: double.infinity,
+                //   padding: EdgeInsets.symmetric(vertical: 4 * wScale, horizontal: 10 * wScale),
+                //   color: const Color(0xFFD81B60),
+                //   child: Row(
+                //     children: [
+                //       Icon(Icons.email, color: Colors.white, size: 10 * wScale),
+                //       SizedBox(width: 4 * wScale),
+                //       Expanded(child: Text(doctor.email, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: Colors.white, fontSize: tinyFont))),
+                //       Icon(Icons.location_on, color: Colors.white, size: 10 * wScale),
+                //       SizedBox(width: 4 * wScale),
+                //       Expanded(child: Text(doctor.location, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: Colors.white, fontSize: tinyFont))),
+                //     ],
+                //   ),
+                // ),
               ],
             ),
           ),
@@ -238,7 +235,11 @@ class DoctorDetailBlock extends StatelessWidget {
               ),
               SizedBox(width: spaceMed),
               GestureDetector(
-                onTap: () => _openWhatsapp(context, doctor.whatsappNumber.isNotEmpty ? doctor.whatsappNumber : doctor.phoneNumber),
+                onTap: () => _openWhatsapp(
+                    context,
+                    doctor.whatsappNumber.isNotEmpty ? doctor.whatsappNumber : doctor.phoneNumber,
+                  message: "Hi *${doctor.name}*, I found your business on GNW Bazaar. I would like to know more details.",
+                ),
                 child: SvgPicture.asset(
                   "lib/icons/whatsapp.svg",
                   height: 38 * wScale,
@@ -287,20 +288,61 @@ class DoctorDetailBlock extends StatelessWidget {
           child: Container(
             margin: EdgeInsets.symmetric(horizontal: spaceLarge),
             width: double.infinity,
-            padding: EdgeInsets.symmetric(vertical: spaceSmall),
+            padding: EdgeInsets.zero,
             decoration: BoxDecoration(
               color: const Color(0xFFFFA726),
               borderRadius: BorderRadius.circular(30 * wScale),
-              border: Border.all(color: Colors.black, width: 1.3),
             ),
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text("CALL", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15 * wScale)),
-                SizedBox(width: 10 * wScale),
-                Container(width: 1, height: 16 * wScale, color: Colors.black),
-                SizedBox(width: 10 * wScale),
-                Text(doctor.phoneNumber, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15 * wScale)),
+
+                // LEFT BLACK SECTION
+                Container(
+                  alignment:Alignment.topLeft ,
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 6 * wScale,
+                    vertical: 3* wScale,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.black,
+                    borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(30 * wScale),
+                      bottomLeft: Radius.circular(30 * wScale),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.call,
+                        color: Colors.white,
+                        size: 16 * wScale,
+                      ),
+                      SizedBox(width: 5 * wScale),
+                      Text(
+                        "CALL",
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14 * wScale,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                SizedBox(width: 12 * wScale),
+
+                // PHONE NUMBER
+                Expanded(
+                  child: Text(
+                    doctor.phoneNumber,
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 15 * wScale,
+                      color: Colors.black,
+                    ),
+                  ),
+                ),
               ],
             ),
           ),
@@ -314,7 +356,7 @@ class DoctorDetailBlock extends StatelessWidget {
         Container(
           margin: EdgeInsets.symmetric(horizontal: spaceLarge),
           width: double.infinity,
-          padding: EdgeInsets.symmetric(vertical: 6 * wScale),
+          padding: EdgeInsets.symmetric(vertical: 4 * wScale),
           decoration: BoxDecoration(color: const Color(0xFFFFA726), borderRadius: BorderRadius.circular(30 * wScale)),
           alignment: Alignment.center,
           child: Text("HIGHLIGHTS", style: TextStyle(fontWeight: FontWeight.bold, fontSize: subtitleFont)),
@@ -325,7 +367,7 @@ class DoctorDetailBlock extends StatelessWidget {
           child: Text(
             doctor.aboutDoctor.isNotEmpty ? doctor.aboutDoctor : "No details available.",
             textAlign: TextAlign.justify,
-            style: TextStyle(fontSize: subtitleFont, height: 1.4, color: Colors.black87),
+            style: TextStyle(fontSize: subtitleFont, height: 1.2, color: Colors.black87),
           ),
         ),
       ],

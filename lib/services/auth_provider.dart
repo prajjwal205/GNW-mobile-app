@@ -9,11 +9,12 @@ import 'package:gnw/Models/healthcare_model.dart';
 import '../Models/client_model.dart';
 
 class AuthService {
-  static const String domain = "http://gnwbazaar-002-site2.qtempurl.com";
+  static const String domain = "https://gnwbazaar-002-site2.qtempurl.com";
 
   // Endpoints
   static const String loginUrl = "$domain/GNW_Login";
   static const String signupUrl = "$domain/GNW_Signup";
+  static const String refreshUrl = "$domain/GNW_RefreshToken";
   static const String generateOtpUrl = "$domain/GNW_GenerateOtp";
   static const String resetPassUrl = "$domain/GNW_ForgotPassword";
   static const String categoryUrl = "$domain/GetAll_CategoryMaster";
@@ -22,42 +23,159 @@ class AuthService {
   static const String doctorUrl = "$domain/GetAll_Doctor";
 
   // 1. LOGIN Method
-  Future<Map<String, dynamic>> login(String email, String password) async {
+  Future<Map<String, dynamic>> login(
+      String email,
+      String password,
+      ) async {
     try {
+
       final response = await http.post(
         Uri.parse(loginUrl),
-        headers: {"Content-Type": "application/x-www-form-urlencoded"},
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
         body: {
           "Email": email,
           "Password": password,
         },
       );
 
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        final accessToken = data['Value']?['accessToken'];
-        final refreshToken = data['Value']?['Token'];
+      print("STATUS = ${response.statusCode}");
+      print("BODY = ${response.body}");
 
-        if (accessToken != null) {
-          final prefs = await SharedPreferences.getInstance();
-          await prefs.setString('auth_token', accessToken);
-          if (refreshToken != null) {
-            await prefs.setString('refresh_token', refreshToken);
-          }
-          return {"success": true};
-        }
+
+      if (response.body.isEmpty) {
+        return {
+          "success": false,
+          "message": "Empty response",
+        };
       }
 
       final data = jsonDecode(response.body);
+
+      /// ✅ check API response code, not http status
+      if (data["ResponseCode"] == 200) {
+
+
+        final accessToken = data["Value"]["accessToken"];
+        final refreshToken = data["Value"]["Token"];
+
+        print("ACCESS TOKEN = $accessToken");
+        print("REFRESH TOKEN = $refreshToken");
+
+        final prefs =
+        await SharedPreferences.getInstance();
+
+        await prefs.setString(
+            "auth_token", accessToken);
+
+        if (refreshToken != null) {
+          await prefs.setString(
+              "refresh_token", refreshToken);
+        }
+
+        await prefs.setString(
+            "user_name",
+            data["Value"]["Name"] ?? "");
+
+        return {"success": true};
+
+
+      }
+
       return {
         "success": false,
-        "message": data['Message'] ?? "Invalid Credentials"
+        "message": data["Message"],
       };
     } catch (e) {
-      return {"success": false, "message": "Connection Error"};
+      print("LOGIN ERROR = $e");
+
+      return {
+        "success": false,
+        "message": e.toString(),
+      };
     }
   }
 
+
+
+
+  Future<bool> refreshToken() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final refreshToken = prefs.getString('refresh_token') ?? '';
+
+      if (refreshToken.isEmpty) return false;
+
+      var request = http.MultipartRequest(
+        'POST',
+        Uri.parse(refreshUrl),
+      );
+
+      request.fields['token'] = refreshToken;
+
+      var response = await request.send();
+
+      if (response.statusCode == 200) {
+        var res = await http.Response.fromStream(response);
+        final data = jsonDecode(res.body);
+
+        final newAccessToken = data['Value']?['accessToken'];
+        final newRefreshToken = data['Value']?['Token'];
+
+        if (newAccessToken != null) {
+          await prefs.setString('auth_token', newAccessToken);
+        }
+
+        if (newRefreshToken != null) {
+          await prefs.setString('refresh_token', newRefreshToken);
+        }
+
+        return true;
+      }
+
+      return false;
+    } catch (e) {
+      print("Refresh error: $e");
+      return false;
+    }
+  }
+  Future<http.Response> authorizedGet(String url) async {
+    final prefs = await SharedPreferences.getInstance();
+    String token = prefs.getString('auth_token') ?? '';
+    print("TOKEN : = ${token}, end");
+
+
+    var response = await http.get(
+      Uri.parse(url),
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer $token",
+      },
+    );
+
+    if (response.statusCode == 401) {
+      bool refreshed = await refreshToken();
+
+      if (refreshed) {
+        token = prefs.getString('auth_token') ?? '';
+
+
+        response = await http.get(
+          Uri.parse(url),
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": "Bearer $token",
+          },
+        );
+      } else {
+        // refresh failed → logout
+        await logout();
+      }
+    }
+
+    return response;
+  }
   // 2. Signup Method
   Future<Map<String, dynamic>> signup(
       String name, String email, String phone, String password) async {
@@ -94,6 +212,7 @@ class AuthService {
     }
   }
 
+
   Future<Map<String, dynamic>> generateOtp(String email) async {
     try {
       final response = await http.post(
@@ -123,34 +242,23 @@ class AuthService {
 
   static Future<List<CategoryModel>> fetchCategories() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final String token = prefs.getString('auth_token') ?? '';
+      final auth = AuthService();
 
-      print("Using Token: $token");
-
-      final response = await http.get(
-        Uri.parse(categoryUrl),
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": "Bearer $token",
-        },
-      );
-
-      print("Categories Status: ${response.statusCode}");
+      final response = await auth.authorizedGet(categoryUrl);
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
+
         if (data['Value'] != null && data['Value'] is List) {
           final list = data['Value'] as List;
-          return list.map((item) => CategoryModel.fromJson(item)).toList();
+          return list.map((e) => CategoryModel.fromJson(e)).toList();
         }
-        return [];
-        }
-        else {
-        throw Exception("Server Error: ${response.statusCode} - ${response.reasonPhrase}");        }
+      }
+
+      return [];
     } catch (e) {
       print("Error fetching categories: $e");
-      throw e;
+      return [];
     }
   }
 
@@ -163,30 +271,26 @@ class AuthService {
 
   static Future<List<HealthcareCategoryModel>> fetchHealthcareCategories() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final String token = prefs.getString('auth_token') ?? '';
+      final auth = AuthService();
 
-      final response = await http.get(
-        Uri.parse(healthcareUrl),
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": "Bearer $token",
-        },
-      );
+      final response = await auth.authorizedGet(healthcareUrl);
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
+
         if (data['Value'] != null && data['Value'] is List) {
           final list = data['Value'] as List;
-          return list.map((item) => HealthcareCategoryModel.fromJson(item)).toList();
+          return list
+              .map((item) => HealthcareCategoryModel.fromJson(item))
+              .toList();
         }
       }
+
       return [];
     } catch (e) {
       return [];
     }
   }
-
   // 4. RESET PASSWORD (OTP + NEW PASSWORD)
   Future<Map<String, dynamic>> resetPassword({
     required String email,
@@ -222,32 +326,21 @@ class AuthService {
 
   static Future<List<ClientModel>> fetchAllClients() async {
     try {
-      // 1. Get the Token
-      final prefs = await SharedPreferences.getInstance();
-      final String token = prefs.getString('auth_token') ?? '';
+      final auth = AuthService();
 
-      // 2. Send Request WITH Token
-      final response = await http.get(
-        Uri.parse(clientUrl),
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": "Bearer $token", // <--- THIS IS CRITICAL
-        },
-      );
-
-      print("Client API Status: ${response.statusCode}"); // Debug Print
-      print("Client API Body: ${response.body}");         // Debug Print
+      final response = await auth.authorizedGet(clientUrl);
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
+
         if (data['Value'] != null && data['Value'] is List) {
           final list = data['Value'] as List;
-          return list.map((item) => ClientModel.fromJson(item)).toList();
+          return list.map((e) => ClientModel.fromJson(e)).toList();
         }
       }
+
       return [];
     } catch (e) {
-      print("Error fetching clients: $e");
       return [];
     }
   }
@@ -255,36 +348,25 @@ class AuthService {
 
   // fetch doctors
 
-  static Future<List<DoctorModel>> fetchDoctor() async{
-    try{
-      final prefs = await SharedPreferences.getInstance();
-      final String token = prefs.getString('auth_token')??'';
+  static Future<List<DoctorModel>> fetchDoctor() async {
+    try {
+      final auth = AuthService();
 
-      final response = await http.get(
-        Uri.parse(doctorUrl),
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": "Bearer $token",
-        }
-      );
-      print("Doctor API status ${response.statusCode}");
-      if(response.statusCode == 200){
+      final response = await auth.authorizedGet(doctorUrl);
+
+      if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        print(" Doctors list: ${response.body}");
 
-        if(data['Value'] != null && data['Value'] is List){
-          final List<dynamic> rawList = data['Value'];
-          return rawList.map((item)=> DoctorModel.fromJson(item)).toList();
+        if (data['Value'] != null && data['Value'] is List) {
+          final list = data['Value'] as List;
+          return list.map((e) => DoctorModel.fromJson(e)).toList();
         }
-        print(" Doctors list: ${response.body}");
-
       }
-    return [];
+
+      return [];
+    } catch (e) {
+      return [];
     }
-    catch (e) {
-    print("Error fetching doctors: $e");
-    return [];
-  }
   }
 
 
@@ -374,7 +456,6 @@ class AuthController extends StateNotifier<AsyncValue<void>> {
   }
 }
 
-//PROVIDERS
 final authServiceProvider = Provider<AuthService>((ref) {
   return AuthService();
 });

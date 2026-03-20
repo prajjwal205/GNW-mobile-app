@@ -15,7 +15,14 @@ PreferredSizeWidget buildCustomAppBar(
     ) {
   final responsiveHeight = ResponsiveHelper.getAppBarHeight(context);
   final padding = ResponsiveHelper.getPadding(context);
-  final spacing = ResponsiveHelper.getSpacing(context, baseSpacing: 8);
+  final spacing = ResponsiveHelper.getSpacing(context, baseSpacing: 6);
+
+  // --- EXTRACT AND CAPITALIZE FIRST NAME ---
+  String rawName = userName.toString().trim();
+  String firstName = rawName.isNotEmpty ? rawName.split(' ').first : '';
+  String displayFirstName = firstName.isNotEmpty
+      ? '${firstName[0].toUpperCase()}${firstName.substring(1)}'
+      : '';
 
   return PreferredSize(
     preferredSize: Size.fromHeight(responsiveHeight),
@@ -62,7 +69,7 @@ PreferredSizeWidget buildCustomAppBar(
                             ),
                           ),
                           Text(
-                            userName.toUpperCase(),
+                            displayFirstName,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: TextStyle(
@@ -129,6 +136,7 @@ PreferredSizeWidget buildCustomAppBar(
                         width: size,
                         height: size,
                         child: PopupMenuButton<String>(
+                          color: Colors.white,
                           padding: EdgeInsets.zero,
                           offset: const Offset(0, 45),
                               child: Container(
