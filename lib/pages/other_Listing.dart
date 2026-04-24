@@ -1,52 +1,44 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:gnw/Models/doctor_model.dart';
 import 'package:gnw/services/auth_provider.dart';
+import '../Models/client_model.dart'; // ✅ Path check kar lena
 import '../widget/customAppBar.dart';
 import '../utils/responsive_helper.dart';
 import '../widget/doctor_image_header.dart';
 import '../widget/doctor_contact_info.dart';
 import '../widget/doctor_call_button.dart';
 
-final doctorListProvider = FutureProvider.family.autoDispose<List<DoctorModel>, int>((ref, categoryId) async {
-  final allDoctors = await AuthService.fetchDoctor();
+// 1. Provider ab ClientModel ki list return karega
+final serviceListProvider = FutureProvider.family.autoDispose<List<ClientModel>, int>((ref, subCategoryId) async {
 
-  final filteredDoctors = allDoctors.where((doc) => doc.categoryIds.contains(categoryId)).toList();
+  final clientList = await AuthService.ClientData(subCategoryId);
 
-  // 2. Sort alphabetically by name (Case-insensitive)
-  // NOTE: Replace `.name` with whatever property your DoctorModel uses for the doctor's name (e.g., `.doctorName` or `.fullName`)
-  filteredDoctors.sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
+  // 🚀 Sort the list alphabetically (Case-insensitive)
+  // NOTE: Replace `.name`   with the actual property name inside your ClientModel
+  // (It might be .clientName, .businessName, or .title depending on your model)
+  clientList.sort((a, b) => a.clientName.toLowerCase().compareTo(b.clientName.toLowerCase()));
 
-  // 3. Return the sorted list
-  return filteredDoctors;
-
-
-  // return allDoctors.where((doc) => doc.categoryIds.contains(categoryId)).toList();
+  return clientList;
+  // 🚀 Tumhare AuthService ka naya function call ho raha hai
+  // return await AuthService.ClientData(subCategoryId);
 });
 
-class DoctorListPage extends ConsumerStatefulWidget {
-  final String categoryName;
-  final int categoryId;
+class ServiceListPage extends ConsumerStatefulWidget {
+  final String subCategoryName;
+  final int subCategoryId;
 
-  const DoctorListPage({
+  const ServiceListPage({
     super.key,
-    required this.categoryName,
-    required this.categoryId,
+    required this.subCategoryName,
+    required this.subCategoryId,
   });
 
   @override
-  ConsumerState<DoctorListPage> createState() => _DoctorListPageState();
+  ConsumerState<ServiceListPage> createState() => _ServiceListPageState();
 }
 
-class _DoctorListPageState extends ConsumerState<DoctorListPage> {
+class _ServiceListPageState extends ConsumerState<ServiceListPage> {
   final PageController _pageController = PageController();
-
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-    });
-  }
 
   @override
   void dispose() {
@@ -54,40 +46,43 @@ class _DoctorListPageState extends ConsumerState<DoctorListPage> {
     super.dispose();
   }
 
-
-
   @override
   Widget build(BuildContext context) {
-    final doctorAsync = ref.watch(doctorListProvider(widget.categoryId));
+    final serviceAsync = ref.watch(serviceListProvider(widget.subCategoryId));
 
     return MediaQuery(
       data: MediaQuery.of(context).copyWith(textScaler: const TextScaler.linear(1.0)),
       child: Scaffold(
         backgroundColor: Colors.white,
         appBar: CustomAppBar(appBarHeight: ResponsiveHelper.getAppBarHeight(context)),
-        body: doctorAsync.when(
+        body: serviceAsync.when(
           loading: () => const Center(child: CircularProgressIndicator(color: Color(0xFFFFA726))),
           error: (error, stack) => Center(child: Text('Error: $error')),
-          data: (doctorList) {
-            if (doctorList.isEmpty) {
-              return Center(child: Text("No listings available yet", style: const TextStyle(fontSize: 15, color: Colors.red)));
+          data: (serviceList) {
+            if (serviceList.isEmpty) {
+              return Center(
+                  child: Text(
+                      "No listings available for ${widget.subCategoryName}",
+                      style: const TextStyle(fontSize: 15, color: Colors.red)
+                  )
+              );
             }
 
             return PageView.builder(
               controller: _pageController,
               scrollDirection: Axis.horizontal,
               physics: const BouncingScrollPhysics(),
-              itemCount: doctorList.length,
+              itemCount: serviceList.length,
               itemBuilder: (context, index) {
-                final doctor = doctorList[index];
+                final clientData = serviceList[index];
                 return SingleChildScrollView(
                   physics: const BouncingScrollPhysics(),
                   child: Padding(
                     padding: const EdgeInsets.only(top: 10, bottom: 40),
-                    child: DoctorDetailBlock(
-                      doctor: doctor,
+                    child: ServiceDetailBlock(
+                      clientName: clientData,
                       index: index,
-                      totalCount: doctorList.length,
+                      totalCount: serviceList.length,
                       pageController: _pageController,
                     ),
                   ),
@@ -101,18 +96,15 @@ class _DoctorListPageState extends ConsumerState<DoctorListPage> {
   }
 }
 
-// ============================================================================
-// 2. THE ASSEMBLER BLOCK (Stacks your clean widgets together)
-// ============================================================================
-class DoctorDetailBlock extends StatelessWidget {
-  final DoctorModel doctor;
+class ServiceDetailBlock extends StatelessWidget {
+  final ClientModel clientName; // ✅ Model Type use kiya
   final int index;
   final int totalCount;
   final PageController pageController;
 
-  const DoctorDetailBlock({
+  const ServiceDetailBlock({
     super.key,
-    required this.doctor,
+    required this.clientName,
     required this.index,
     required this.totalCount,
     required this.pageController,
@@ -127,30 +119,41 @@ class DoctorDetailBlock extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // 🚀 1. Image & Arrows
-        DoctorImageHeader(doctor: doctor, index: index, totalCount: totalCount, pageController: pageController, wScale: wScale),
+        // 🚀 1. Image Header
+        DoctorImageHeader(
+          doctor: clientName,
+          index: index,
+          totalCount: totalCount,
+          pageController: pageController,
+          wScale: wScale,
+        ),
 
-        // 🚀 2. Contact Info
-        DoctorContactInfo(doctor: doctor, wScale: wScale),
+        // 🚀 2. Contact Info ()
+        DoctorContactInfo(doctor: clientName, wScale: wScale),
         SizedBox(height: spaceMed * 0.4),
 
         // 🚀 3. Call Button
-        DoctorCallButton(doctor: doctor, wScale: wScale),
+        DoctorCallButton(doctor: clientName, wScale: wScale),
         SizedBox(height: spaceMed * 0.6),
 
-        // 🚀 4. Highlights Section (Kept simple and inline)
+        // 🚀 4. Highlights Section
         Container(
           margin: EdgeInsets.symmetric(horizontal: spaceLarge),
           width: double.infinity,
-          padding: EdgeInsets.symmetric(vertical: 4 * wScale),
-          decoration: BoxDecoration(color: const Color(0xFFFFA726), borderRadius: BorderRadius.circular(30 * wScale)),
+          padding: EdgeInsets.symmetric(vertical: 6 * wScale),
+          decoration: BoxDecoration(
+              color: const Color(0xFFFFA726),
+              borderRadius: BorderRadius.circular(30 * wScale)
+          ),
           alignment: Alignment.center,
           child: Text("HIGHLIGHTS", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13 * wScale)),
         ),
+
         Padding(
           padding: EdgeInsets.only(left: spaceLarge, right: spaceLarge, top: 10 * wScale, bottom: spaceLarge),
           child: Text(
-            doctor.aboutDoctor.isNotEmpty ? doctor.aboutDoctor : "No details available.",
+            // ✅ Naya JSON field 'highlights' use ho raha hai
+            clientName.highlights.isNotEmpty ? clientName.highlights : "No details available.",
             textAlign: TextAlign.justify,
             style: TextStyle(fontSize: 13 * wScale, height: 1.2, color: Colors.black87),
           ),

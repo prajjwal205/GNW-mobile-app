@@ -1,9 +1,12 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:gnw/utils/SucessButton.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:image_picker/image_picker.dart';
+import '../login_signup page/login.dart';
 import '../utils/responsive_helper.dart';
+import 'package:share_plus/share_plus.dart';
 
 class Profilepage extends ConsumerStatefulWidget {
   const Profilepage({super.key});
@@ -15,6 +18,30 @@ class Profilepage extends ConsumerStatefulWidget {
 class _ProfilepageState extends ConsumerState<Profilepage> {
   bool _isLoading = true;
 
+
+  // --- SHARE APP LOGIC ---
+  void _shareApp() {
+    SharePlus.instance.share(ShareParams(text: "Check out GNW Bazaar! The No.1 Search APP for Greater Noida West. Download now!"));  }
+
+  // --- LOGOUT LOGIC ---
+  Future<void> _logout() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.clear(); // Saara user data delete karega
+
+    if (mounted) {
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (context) =>  LoginPage()),
+        (route) => false,
+      );
+
+      // ScaffoldMessenger.of(context).showSnackBar(
+      //   const SnackBar(content: Text("Logged out successfully!"), backgroundColor: Colors.green),
+      // );
+      Sucessbutton.show(context, message: "you log out");
+
+    }
+  }
   // Controllers for direct inline editing
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _addressController = TextEditingController();
@@ -93,9 +120,7 @@ class _ProfilepageState extends ConsumerState<Profilepage> {
     }
 
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Profile Saved Successfully!"), backgroundColor: Colors.green),
-      );
+      Sucessbutton.show(context, message: "Profile Saved!");
     }
   }
 
@@ -230,15 +255,72 @@ class _ProfilepageState extends ConsumerState<Profilepage> {
 
                     SizedBox(height: 30 * wScale),
 
+
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center, // 🚀 Dono ko center mein laane ke liye
+                      children: [
+                        // SHARE BUTTON
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 5.0),
+                          child: ElevatedButton.icon(
+                            onPressed: _shareApp,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.red,
+                              foregroundColor: Colors.white,
+                              // 🚀 Padding kam kar di taaki button ki height/width choti ho jaye
+                              padding: EdgeInsets.symmetric(horizontal: 12 * wScale, vertical: 8 * wScale),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12 * wScale),
+                              ),
+                              elevation: 0,
+                            ),
+                            icon: Icon(Icons.share_sharp, size: 16 * wScale), // 🚀 Icon size 20 se 16 kiya
+                            label: Text(
+                              'Share', // 🚀 Text thoda chota kar diya better look ke liye
+                              style: TextStyle(fontSize: 12 * wScale, fontWeight: FontWeight.bold), // 🚀 Font 14 se 12 kiya
+                            ),
+                          ),
+                        ),
+
+                        SizedBox(width: 10 * wScale), // 🚀 Beech ka gap 15 se 10 kar diya
+
+                        // LOGOUT BUTTON
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 5.0),
+                          child: ElevatedButton.icon(
+                            onPressed: _logout,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.red,
+                              foregroundColor: Colors.white,
+                              // 🚀 Padding kam kar di
+                              padding: EdgeInsets.symmetric(horizontal: 12 * wScale, vertical: 8 * wScale),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12 * wScale),
+                              ),
+                              elevation: 0,
+                            ),
+                            icon: Icon(Icons.logout_outlined, size: 16 * wScale), // 🚀 Icon size 20 se 16 kiya
+                            label: Text(
+                              'Logout',
+                              style: TextStyle(fontSize: 12 * wScale, fontWeight: FontWeight.bold), // 🚀 Font 14 se 12 kiya
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+
+              // SizedBox(height:5 * wScale),
                     // --- SAVE BUTTON ---
                     Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 20 * wScale),
+                      padding: EdgeInsets.symmetric(horizontal: 20 * wScale, ),
                       child: ElevatedButton(
                         onPressed: _saveProfileData,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.red,
-                          minimumSize: Size(double.infinity, 50 * wScale),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30 * wScale)),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12 * wScale)),
                           elevation: 3,
                         ),
                         child: Text(
@@ -250,9 +332,6 @@ class _ProfilepageState extends ConsumerState<Profilepage> {
                     SizedBox(height: 30 * wScale),
                   ],
                 ),
-              )
-            ],
-          ),
         ),
       ),
     );

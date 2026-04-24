@@ -74,12 +74,12 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                     children: [
                       Image.asset(
                         "lib/images/GNW_RED_LOGO.png",
-                        height: ResponsiveHelper.screenHeight(context) * 0.20,
+                        height: ResponsiveHelper.screenHeight(context) * 0.150,
                         width: ResponsiveHelper.screenWidth(context) * 0.4,
                       ),
                       const SizedBox(height: 5),
                       const Text(
-                        "No.1 Search Engine in \n Greater Noida West",
+                        "No.1 Search APP for \n Greater Noida West",
                         style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.bold,

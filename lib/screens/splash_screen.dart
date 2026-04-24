@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../utils/responsive_helper.dart';
 import '../login_signup page/login.dart';
 import '../homepage.dart';
 
@@ -37,6 +36,7 @@ class _SplashScreenState extends State<SplashScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final size = MediaQuery.of(context).size;
     return Scaffold(
       backgroundColor: Colors.red,
       body: Center(
@@ -45,21 +45,26 @@ class _SplashScreenState extends State<SplashScreen> {
           children: [
             Image.asset(
               "lib/images/GNW_WHITE_LOGO.png",
-              width: ResponsiveHelper.getIconSize(context, baseSize: 180),
-              height: ResponsiveHelper.getIconSize(context, baseSize: 180),
+              width: size.width * 0.45,
+              height: size.width * 0.45,
+              fit: BoxFit.contain,
             ),
-            SizedBox(height: ResponsiveHelper.getSpacing(context, baseSpacing: 20)),
-            Text(
-              "No.1 Search App in\nGreater Noida West",
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: ResponsiveHelper.getFontSize(context, baseSize: 16),
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            SizedBox(height: ResponsiveHelper.getSpacing(context, baseSpacing: 30)),
-            const CircularProgressIndicator(color: Colors.white),
+            // SizedBox(height: ResponsiveHelper.getSpacing(context, baseSpacing: 5)),
+            SizedBox(height: size.height * 0.02),
+        Text(
+          "No.1 Search App for\nGreater Noida West",
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            // Scales font size based on screen width
+            fontSize: size.width * 0.048,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+            fontStyle: FontStyle.italic,
+            height: 1.2, // Adjusts the gap between the two lines
+          ),
+        ),
+            // SizedBox(height: ResponsiveHelper.getSpacing(context, baseSpacing: 30)),
+            // const CircularProgressIndicator(color: Colors.white),
           ],
         ),
       ),

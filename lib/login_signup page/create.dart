@@ -139,7 +139,7 @@ class _SignupPageState extends ConsumerState<SignupPage> {
   Widget build(BuildContext context) {
     // Watch state to show spinner
     final authState = ref.watch(authControllerProvider);
-    final inputBorder = OutlineInputBorder(borderRadius: BorderRadius.circular(30));
+    // final inputBorder = OutlineInputBorder(borderRadius: BorderRadius.circular(30));
 
     return Scaffold(
       backgroundColor: CupertinoColors.white,

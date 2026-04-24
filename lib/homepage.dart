@@ -2,10 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gnw/Models/category_model.dart';
 import 'package:gnw/pages/healthcare_page.dart';
-import 'package:gnw/pages/client_list_page.dart';
+import 'package:gnw/pages/sub_category_page.dart';
 import 'package:gnw/services/auth_provider.dart';
+import 'package:gnw/utils/SucessButton.dart';
+import 'package:gnw/utils/responsive_helper.dart';
 import 'package:gnw/widget/customAppBar.dart';
-import 'package:gnw/widget/floating_search_widget.dart'; // Make sure the path matches where you saved it!
+import 'package:gnw/widget/floating_search_widget.dart';
+import 'package:gnw/widget/sponsor_banner_widget.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+import 'login_signup page/login.dart'; // Make sure the path matches where you saved it!
 
 final userNameProvider = FutureProvider.autoDispose<String>((ref) async {
   return await AuthService.fetchUserName();
@@ -23,7 +29,6 @@ class Homepage extends ConsumerStatefulWidget {
   @override
   ConsumerState<Homepage> createState() => _HomepageState();
 }
-
 class _HomepageState extends ConsumerState<Homepage> {
 
   Future<void> _refreshData() async {
@@ -37,6 +42,25 @@ class _HomepageState extends ConsumerState<Homepage> {
       ]);
     } catch (e) {
       debugPrint("Refresh failed: $e");
+    }
+  }
+
+  Future<void> _logout() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.clear(); // Saara user data delete karega
+
+    if (mounted) {
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (context) =>  LoginPage()),
+            (route) => false,
+      );
+
+      // ScaffoldMessenger.of(context).showSnackBar(
+      //   const SnackBar(content: Text("Logged out successfully!"), backgroundColor: Colors.green),
+      // );
+      Sucessbutton.show(context, message: "you log out");
+
     }
   }
 
@@ -75,8 +99,8 @@ class _HomepageState extends ConsumerState<Homepage> {
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (_) => ClientListPage(
-            categoryId: item.id,
+          builder: (_) => SubCategoryPage(
+            categoryMasterId: item.id,
             categoryName: item.categoryName,
           ),
         ),
@@ -94,24 +118,20 @@ class _HomepageState extends ConsumerState<Homepage> {
     final iconBoxSize = width * 0.15;
     final iconPadding = iconBoxSize * 0.2;
     final labelFontSize = (width * 0.030).clamp(11.0, 14.0);
-    final bannerFontSize = width * 0.03;
+    // final bannerFontSize = width * 0.03;
 
     // --- WATCHING DATA FROM PROVIDERS ---
-    final userAsync = ref.watch(userNameProvider);
+    // final userAsync = ref.watch(userNameProvider);
     final categoriesAsync = ref.watch(categoriesProvider);
+    double wScale = ResponsiveHelper.screenWidth(context) / 390.0;
 
     return MediaQuery(
       data: MediaQuery.of(context).copyWith(textScaler: TextScaler.noScaling),
+
       child: Scaffold(
         backgroundColor: Colors.white,
-        // AppBar handles the User Name state
-        appBar: userAsync.when(
-          data: (name) => buildCustomAppBar(context, name, 90),
-          loading: () => buildCustomAppBar(context, "Loading...", 90),
-          error: (err, stack) => buildCustomAppBar(context, "Guest", 90),
-        ),
+        appBar: CustomAppBar(appBarHeight: ResponsiveHelper.getAppBarHeight(context)),
         body: SafeArea(
-          // --- PULL TO REFRESH WRAPPER ---
           child: RefreshIndicator(
             onRefresh: _refreshData,
             color: Colors.white,
@@ -128,20 +148,10 @@ class _HomepageState extends ConsumerState<Homepage> {
                     child: Column(
                       children: [
                         SizedBox(height: verticalSpacing),
-                        AspectRatio(
+                        const SponsorBannerWidget(
+                          bannerType: "TOP BANNER",
                           aspectRatio: 16 / 6,
-                          child: Container(
-                            decoration: BoxDecoration(
-                              color: Colors.grey.shade300,
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                            alignment: Alignment.center,
-                            child: Text("SPONSOR\nBANNER",
-                                style: TextStyle(
-                                  fontSize: bannerFontSize,
-                                  fontWeight: FontWeight.bold,
-                                )),
-                          ),
+                          scrollSeconds: 6,
                         ),
                         SizedBox(height: verticalSpacing),
                         // Search
@@ -169,9 +179,26 @@ class _HomepageState extends ConsumerState<Homepage> {
                               children: [
                                 Icon(Icons.category_outlined, size: 60, color: Colors.grey.shade400),
                                 const SizedBox(height: 16),
-                                Text(
-                                  "Logout krke login kijiye",
-                                  style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 5.0),
+                                  child: ElevatedButton.icon(
+                                    onPressed: _logout,
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: Colors.red,
+                                      foregroundColor: Colors.white,
+                                      // 🚀 Padding kam kar di
+                                      padding: EdgeInsets.symmetric(horizontal: 12 * wScale, vertical: 8 * wScale),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(12 * wScale),
+                                      ),
+                                      elevation: 0,
+                                    ),
+                                    icon: Icon(Icons.logout_outlined, size: 16 * wScale), // 🚀 Icon size 20 se 16 kiya
+                                    label: Text(
+                                      'Logout or Refresh',
+                                      style: TextStyle(fontSize: 12 * wScale, fontWeight: FontWeight.bold), // 🚀 Font 14 se 12 kiya
+                                    ),
+                                  ),
                                 ),
                                 // TextButton(
                                 //   onPressed: _refreshData,
@@ -264,13 +291,10 @@ class _HomepageState extends ConsumerState<Homepage> {
                     bottom: horizontalPadding,
                       top: 0,
                     ),
-                    child: AspectRatio(
+                    child:const SponsorBannerWidget(
+                      bannerType: "LOWER BANNER",
                       aspectRatio: 16 / 3,
-                      child: Container(
-                        decoration: BoxDecoration(color: Colors.grey.shade300, borderRadius: BorderRadius.circular(12)),
-                        alignment: Alignment.center,
-                        child: Text("DEAL OF THE DAY", style: TextStyle(fontSize: bannerFontSize, fontWeight: FontWeight.bold)),
-                      ),
+                      scrollSeconds: 7, // 🚀 7 seconds ka time
                     ),
                   ),
                 ),
