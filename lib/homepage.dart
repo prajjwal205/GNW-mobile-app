@@ -47,7 +47,7 @@ class _HomepageState extends ConsumerState<Homepage> {
 
   Future<void> _logout() async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.clear(); // Saara user data delete karega
+    await prefs.clear(); // it will delete all user
 
     if (mounted) {
       Navigator.pushAndRemoveUntil(
@@ -193,10 +193,10 @@ class _HomepageState extends ConsumerState<Homepage> {
                                       ),
                                       elevation: 0,
                                     ),
-                                    icon: Icon(Icons.logout_outlined, size: 16 * wScale), // 🚀 Icon size 20 se 16 kiya
+                                    icon: Icon(Icons.logout_outlined, size: 16 * wScale),
                                     label: Text(
                                       'Logout or Refresh',
-                                      style: TextStyle(fontSize: 12 * wScale, fontWeight: FontWeight.bold), // 🚀 Font 14 se 12 kiya
+                                      style: TextStyle(fontSize: 12 * wScale, fontWeight: FontWeight.bold),
                                     ),
                                   ),
                                 ),

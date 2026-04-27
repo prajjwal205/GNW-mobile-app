@@ -12,14 +12,11 @@ class CategoryCardWidget extends StatelessWidget {
     required this.index,
   });
 
-  // Tumhara color palette maine is widget ke andar daal diya hai
   static final List<Color> _colorPalette = [
-    Colors.red.shade200, Colors.blue.shade200, Colors.green.shade200,
-    Colors.orange.shade200, Colors.purple.shade200, Colors.teal.shade200,
-    Colors.pink.shade200, Colors.indigo.shade200, Colors.cyan.shade400,
-    Colors.deepOrange.shade400, Colors.amber.shade200, Colors.lightBlue.shade200,
-    Colors.lightGreen.shade200, Colors.brown.shade400, Colors.blueGrey.shade400,
-    Colors.deepPurple.shade400,
+    Colors.red.shade200, Colors.blue.shade200, Colors.green.shade200, Colors.orange.shade200,
+    Colors.purple.shade200, Colors.teal.shade200, Colors.pink.shade200, Colors.indigo.shade200,
+    Colors.cyan.shade400, Colors.deepOrange.shade400, Colors.amber.shade200, Colors.lightBlue.shade200,
+    Colors.lightGreen.shade200, Colors.brown.shade400, Colors.blueGrey.shade400, Colors.deepPurple.shade400,
   ];
 
   @override

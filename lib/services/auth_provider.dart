@@ -44,8 +44,8 @@ class AuthService {
           "Password": password,
         },
       );
-      print("STATUS = ${response.statusCode}");
-      print("BODY = ${response.body}");
+      // print("STATUS = ${response.statusCode}");
+      // print("BODY = ${response.body}");
       if (response.body.isEmpty) {
         return {
           "success": false,
@@ -56,8 +56,8 @@ class AuthService {
       if (data["ResponseCode"] == 200) {
         final accessToken = data["Value"]["accessToken"];
         final refreshToken = data["Value"]["Token"];
-        print("ACCESS TOKEN = $accessToken");
-        print("REFRESH TOKEN = $refreshToken");
+        // print("ACCESS TOKEN = $accessToken");
+        // print("REFRESH TOKEN = $refreshToken");
         final prefs =
         await SharedPreferences.getInstance();
         await prefs.setString(
@@ -77,7 +77,7 @@ class AuthService {
         "message": data["Message"],
       };
     } catch (e) {
-      print("LOGIN ERROR = $e");
+      // print("LOGIN ERROR = $e");
 
       return {
         "success": false,
@@ -91,30 +91,30 @@ class AuthService {
     try {
       final prefs = await SharedPreferences.getInstance();
       final oldRefreshToken = prefs.getString('refresh_token') ?? '';
-
-      print("=== REFRESH TOKEN PROCESS STARTED ===");
-      print("OLD REFRESH TOKEN: $oldRefreshToken");
+      //
+      // print("=== REFRESH TOKEN PROCESS STARTED ===");
+      // print("OLD REFRESH TOKEN: $oldRefreshToken");
 
       if (oldRefreshToken.isEmpty) {
-        print("❌ Refresh token is empty in SharedPreferences. Cannot refresh.");
+        // print(" Refresh token is empty in SharedPreferences. Cannot refresh.");
         return false;
       }
 
-      // 🚀 FIX 1: Using standard http.post instead of MultipartRequest (Matches your Login method)
+
       final response = await http.post(
         Uri.parse(refreshUrl),
         headers: {
           "Content-Type": "application/x-www-form-urlencoded",
         },
         body: {
-          // ⚠️ DHYAN DEIN: Apne backend developer se confirm karein ki unhe yahan kya key chahiye.
+          //  DHYAN DEIN: Apne backend developer se confirm karein ki unhe yahan kya key chahiye.
           // ('Token', 'token', 'refreshToken', ya kuch aur)
           "Token": oldRefreshToken,
         },
       );
 
-      print("REFRESH API HTTP STATUS: ${response.statusCode}");
-      print("REFRESH API RESPONSE BODY: ${response.body}");
+      // print("REFRESH API HTTP STATUS: ${response.statusCode}");
+      // print("REFRESH API RESPONSE BODY: ${response.body}");
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -123,9 +123,9 @@ class AuthService {
         if (data['ResponseCode'] == 200) {
           final newAccessToken = data['Value']?['accessToken'];
           final newRefreshToken = data['Value']?['Token'];
-
-          print("✅ SUCCESSFULLY REFRESHED!");
-          print("NEW ACCESS TOKEN: $newAccessToken");
+          //
+          // print(" SUCCESSFULLY REFRESHED!");
+          // print("NEW ACCESS TOKEN: $newAccessToken");
 
           if (newAccessToken != null) {
             await prefs.setString('auth_token', newAccessToken);
@@ -138,15 +138,15 @@ class AuthService {
           return true;
         } else {
           // Agar API ne 200 diya par andar se Token invalid bola
-          print("❌ Backend rejected refresh token: ${data['Message']}");
+          // print("Backend rejected refresh token: ${data['Message']}");
           return false;
         }
       } else {
-        print("❌ Refresh API HTTP Error: ${response.statusCode}");
+        // print(" Refresh API HTTP Error: ${response.statusCode}");
         return false;
       }
     } catch (e) {
-      print("❌ Exception in refreshToken logic: $e");
+      // print(" Exception in refreshToken logic: $e");
       return false;
     }
   }
@@ -194,7 +194,7 @@ class AuthService {
   Future<http.Response> authorizedGet(String url) async {
     final prefs = await SharedPreferences.getInstance();
     String token = prefs.getString('auth_token') ?? '';
-    print("TOKEN : = ${token}, end");
+    // print("TOKEN : = ${token}, end");
 
 
     var response = await http.get(
@@ -322,7 +322,7 @@ class AuthService {
 
       return [];
     } catch (e) {
-      print("Error fetching categories: $e");
+      // print("Error fetching categories: $e");
       return [];
     }
   }
@@ -407,13 +407,13 @@ class AuthService {
       }
       return [];
     } catch (e){
-      print("Error fetching clients: $e");
+      // print("Error fetching clients: $e");
       return [];
     }
 }
 
 
-// 🚀 FETCH ALL CLIENTS (Global Search ke liye)
+// FETCH ALL CLIENTS (Global Search ke liye)
   static Future<List<ClientModel>> fetchAllClients() async {
     try {
       final auth = AuthService();
@@ -431,7 +431,7 @@ class AuthService {
       }
       return [];
     } catch (e) {
-      print("Error fetching all clients: $e");
+      // print("Error fetching all clients: $e");
       return [];
     }
   }
@@ -451,7 +451,7 @@ class AuthService {
       }
       return [];
     } catch (e) {
-      print("Error fetching all subcategories: $e");
+      // print("Error fetching all subcategories: $e");
       return [];
     }
   }
@@ -472,7 +472,7 @@ class AuthService {
       }
       return[];
     }catch (e) {
-      print("Error fetching subcategories: $e");
+      // print("Error fetching subcategories: $e");
       return [];
     }
   }
@@ -531,7 +531,7 @@ class AuthService {
               validSponsors.add(sponsor);
             } catch (modelError) {
               // Agar ek specific item parse karne me error aaye, to pura app crash na ho
-              print("Error Showing single sponsor image: $modelError");
+              // print("Error Showing single sponsor image: $modelError");
             }
           }
           return validSponsors;
@@ -543,7 +543,7 @@ class AuthService {
         throw Exception("Server Error: ${response.statusCode}");
       }
     }catch (e) {
-      print("❌ Error fetching sponsors: $e");
+      // print(" Error fetching sponsors: $e");
       rethrow;
     }
   }

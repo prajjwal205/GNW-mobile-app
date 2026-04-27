@@ -184,7 +184,7 @@ class CustomAppBar extends ConsumerWidget implements PreferredSizeWidget {
                       ],
                     ),
                     Text(
-                      currentTime, // Hamara provider wala time
+                      currentTime,
                       style: TextStyle(
                         fontSize: 9,
                         color: Colors.black,
@@ -201,62 +201,8 @@ class CustomAppBar extends ConsumerWidget implements PreferredSizeWidget {
       ),
     );
   }
-
-  // --- POPUP MENU WIDGET ---
-  // Widget _buildPopupMenu(BuildContext context, WidgetRef ref) {
-  //   final double size = ResponsiveHelper.getIconSize(context, baseSize: 36);
-  //
-  //   return SizedBox(
-  //     width: size,
-  //     height: size,
-  //     child: PopupMenuButton<String>(
-  //       color: Colors.white,
-  //       padding: EdgeInsets.zero,
-  //       offset: const Offset(0, 45),
-  //       icon: const Icon(Icons.more_vert, color: Colors.black),
-  //       onSelected: (value) async {
-  //         if (value == 'logout') {
-  //           await ref.read(authControllerProvider.notifier).logout();
-  //           if (context.mounted) {
-  //             Navigator.pushAndRemoveUntil(
-  //               context,
-  //               MaterialPageRoute(builder: (_) => LoginPage()),
-  //                   (route) => false,
-  //             );
-  //           }
-  //         } else if (value == 'share') {
-  //
-  //           await Share.share(
-  //             'Share app abhi nhi complete h!\nhttp://gnwbazaar.com',
-  //             subject: 'GNW App Invitation',
-  //           );
-  //         }
-  //       },
-  //       itemBuilder: (context) => [
-  //         const PopupMenuItem(
-  //           value: 'share',
-  //           child: ListTile(
-  //             leading: Icon(Icons.share, color: Colors.blue, size: 20),
-  //             title: Text('Share App', style: TextStyle(fontSize: 14)),
-  //             contentPadding: EdgeInsets.zero,
-  //           ),
-  //         ),
-  //         const PopupMenuDivider(),
-  //         const PopupMenuItem(
-  //           value: 'logout',
-  //           child: ListTile(
-  //             leading: Icon(Icons.logout, color: Colors.red, size: 20),
-  //             title: Text('Logout', style: TextStyle(color: Colors.red, fontSize: 14)),
-  //             contentPadding: EdgeInsets.zero,
-  //           ),
-  //         ),
-  //       ],
-  //     ),
-  //   );
-  // }
 }
 
-// Purane ActionIcon code ko isse replace karein
 class ActionIcon extends StatelessWidget {
   final IconData? icon;
   final VoidCallback onTap;
@@ -282,7 +228,6 @@ class ActionIcon extends StatelessWidget {
         child: Center(
           child: imagePath != null
               ? Container(
-            // 🚀 Yahan black border add kiya hai
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               border: Border.all(color: Colors.black, width: 4.5),

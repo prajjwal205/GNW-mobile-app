@@ -232,47 +232,51 @@ class DoctorContactInfo extends StatelessWidget {
         SizedBox(height: 5 * wScale),
 
         // MAP ICON & ADDRESS
+        // Location item in a list with colorful pin like the image
         Padding(
           padding: EdgeInsets.symmetric(horizontal: 16 * wScale),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
+              // 🚀 EXACT IMAGE WALA LOGO DESIGN
               GestureDetector(
                 onTap: () => _openMap(context, mapAddress),
                 child: Container(
-                  height: 32 * wScale,
-                  width: 32 * wScale,
+                  height: 42 * wScale, // Image jaisa thoda prominent size
+                  width: 42 * wScale,
                   decoration: BoxDecoration(
-                      color: const Color(0xFF263238),
-                      borderRadius: BorderRadius.circular(50 * wScale),
-                      border: Border.all(color: Colors.orange, width: 2.0 * wScale, )
+                    color: Colors.white,
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: Colors.orange,
+                      width: 3 * wScale,
+                    ),
                   ),
-                  child: Container(
-                    child: Image.asset("lib/images/LOCATION_ICON.png",
-                      height: 20*wScale,
-                      width: 20*wScale,
+                  child: Center(
+                    child: Image.asset(
+                      "lib/images/LOCATION_ICON.png",
+                      height: 29 * wScale,
+                      width: 29 * wScale,
                       fit: BoxFit.contain,
                     ),
                   ),
                 ),
               ),
-              SizedBox(width: 10 * wScale),
+
+              SizedBox(width: 12 * wScale), // Logo aur Text ke beech ka gap
+
+              // 🚀 ADDRESS TEXT (Left Aligned jaisa photo mein hai)
               Expanded(
-                child: Padding(
-                  padding: EdgeInsets.only(top: 2 * wScale),
-                  child: Center(
-                    child: Text(
-                      mapAddress,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      textAlign: TextAlign.start,
-                      style: TextStyle(
-                        fontSize: 14 * wScale,
-                        color: Colors.grey[800],
-                        fontWeight: FontWeight.w600,
-                        height: 1.3,
-                      ),
-                    ),
+                child: Text(
+                  mapAddress, // "207, Chauganpur, Knowledge Park V..."
+                  maxLines: 3,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.start, // 🚀 Left align (Center hata diya hai)
+                  style: TextStyle(
+                    fontSize: 14 * wScale,
+                    color: Colors.black87,
+                    fontWeight: FontWeight.w700, // Photo mein text thoda bold hai
+                    height: 1.3, // Lines ke beech ka gap
                   ),
                 ),
               ),

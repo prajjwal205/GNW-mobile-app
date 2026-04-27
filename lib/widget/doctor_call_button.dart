@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:share_plus/share_plus.dart'; // 🚀 SHARE KE LIYE YE ZAROORI HAI
+import 'package:share_plus/share_plus.dart';
 
 class DoctorCallButton extends StatelessWidget {
   final dynamic doctor;
@@ -32,13 +32,13 @@ class DoctorCallButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       margin: EdgeInsets.symmetric(horizontal: 16 * wScale),
-      padding: EdgeInsets.symmetric(vertical: 2 * wScale, horizontal: 10 * wScale), // Thodi padding di taaki icons chipke nahi
+      padding: EdgeInsets.symmetric(vertical: 2 * wScale, horizontal: 10 * wScale),
       decoration: BoxDecoration(
           color: const Color(0xFFFFA726),
           borderRadius: BorderRadius.circular(30 * wScale)
       ),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween, // Dono hisso ko left aur right me faila dega
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
 
           // 1. LEFT SIDE: CALL SECTION
@@ -46,9 +46,8 @@ class DoctorCallButton extends StatelessWidget {
             onTap: () => _callNumber(context, doctor.phoneNumber),
             child: Row(
               children: [
-                //  CALL ICON WALA WHITE CIRCLE
                 Container(
-                  height: 28 * wScale, // Height aur width BARABAR rakhi hai
+                  height: 28 * wScale,
                   width: 28 * wScale,
                   decoration: const BoxDecoration(
                     color: Colors.white,
@@ -73,10 +72,9 @@ class DoctorCallButton extends StatelessWidget {
           ),
 
           GestureDetector(
-            onTap: _shareListing, //  YAHAN SHARE FUNCTION CALL HOGA
+            onTap: _shareListing,
             child: Row(
               children: [
-                //  SHARE ICON WALA WHITE CIRCLE
                 Container(
                   height: 28 * wScale,
                   width: 28 * wScale,
