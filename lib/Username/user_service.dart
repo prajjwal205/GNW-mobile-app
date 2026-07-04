@@ -9,7 +9,7 @@ class UserService {
   
   static Future<String> fetchUserName() async {
     await Future.delayed(const Duration(seconds: 1)); // Simulate API call delay
-    _userName = "Prajjwal"; // Replace with actual API response
+    _userName = "GNW"; // Replace with actual API response
     return _userName;
   }
 }

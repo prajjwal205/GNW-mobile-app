@@ -1,3 +1,5 @@
+
+import 'package:flutter/cupertino.dart'; // 🚀 Cupertino import for iOS widgets
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gnw/login_signup%20page/create.dart';
@@ -9,7 +11,6 @@ import '../utils/responsive_helper.dart';
 class LoginPage extends ConsumerStatefulWidget {
   @override
   _LoginPageState createState() => _LoginPageState();
-
 }
 
 class _LoginPageState extends ConsumerState<LoginPage> {
@@ -17,17 +18,41 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
 
+  // 🚀 Native iOS Style Alert Dialog Helper
+  void _showIOSAlert(String title, String message) {
+    if (!mounted) return;
+    showCupertinoDialog(
+      context: context,
+      builder: (context) => CupertinoAlertDialog(
+        title: Text(title),
+        content: Text(message),
+        actions: [
+          CupertinoDialogAction(
+            isDefaultAction: true,
+            child: const Text("OK", style: TextStyle(color: Colors.blue)),
+            onPressed: () => Navigator.pop(context),
+          ),
+        ],
+      ),
+    );
+  }
 
   void handleLogin() async {
     String email = emailController.text.trim();
     String password = passwordController.text.trim();
 
     if (email.isEmpty || password.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Please enter both email and password")),
-      );
+      _showIOSAlert("Missing Details", "Please enter both email and password.");
       return;
     }
+
+    bool isEmailValid = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(email);
+
+    if (!isEmailValid) {
+      _showIOSAlert("Invalid Email", "Please double check your Email address.");
+      return;
+    }
+
     final String? error = await ref.read(authControllerProvider.notifier).login(email, password);
     if (mounted) {
       if (error == null) {
@@ -36,12 +61,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
           MaterialPageRoute(builder: (context) => const Homepage()),
         );
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(error),
-            backgroundColor: Colors.red,
-          ),
-        );
+        _showIOSAlert("Login Failed", error);
       }
     }
   }
@@ -49,14 +69,10 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authControllerProvider);
+
     ref.listen(authControllerProvider, (previous, next) {
       if (next.hasError) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(next.error.toString()),
-            backgroundColor: Colors.red,
-          ),
-        );
+        _showIOSAlert("Error", next.error.toString());
       }
     });
 
@@ -65,7 +81,8 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       body: SafeArea(
         child: Padding(
           padding: EdgeInsets.symmetric(
-            horizontal: ResponsiveHelper.screenWidth(context) * 0.05,          ),
+            horizontal: ResponsiveHelper.screenWidth(context) * 0.05,
+          ),
           child: Center(
             child: SingleChildScrollView(
               child: Column(
@@ -101,29 +118,35 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                   ),
                   const SizedBox(height: 10),
                   const Text(
-                    "Welcome back you ha've \n been missed!",
+                    "Welcome back you've \n been missed!",
                     style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                     textAlign: TextAlign.center,
                   ),
-                  SizedBox(height: ResponsiveHelper.screenHeight(context) *0.03),
+                  SizedBox(height: ResponsiveHelper.screenHeight(context) * 0.03),
 
-                  TextField(
+                  // 🚀 iOS Style Email Field
+            TextFormField(
                     controller: emailController,
+                    textInputAction: TextInputAction.next,
+                    keyboardType: TextInputType.emailAddress,
+                    autofillHints: const [AutofillHints.email], // Google Auto-fill support
                     decoration: InputDecoration(
                       labelText: "Email", // Changed from Mobile to Email
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(30),
                       ),
                     ),
-                    keyboardType: TextInputType.emailAddress,
                   ),
                   SizedBox(height:ResponsiveHelper.screenHeight(context) * 0.03),
 
-                  TextField(
+                  TextFormField(
                     controller: passwordController,
                     obscureText: !_isPasswordVisible,
+                    textInputAction: TextInputAction.done, // Keyboard mein 'Done/Submit' button aayega
+                    onFieldSubmitted: (value) => handleLogin(),// Keyboard se enter marne par direct login
                     decoration: InputDecoration(
                       labelText: "Password",
+
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(30),
                       ),
@@ -145,65 +168,55 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      // 1. New User? -> Goes to Signup Page
-                      TextButton(
+                      CupertinoButton(
+                        padding: EdgeInsets.zero,
                         onPressed: () {
                           Navigator.push(
                             context,
-                            MaterialPageRoute(builder: (context) => const SignupPage()),
+                            CupertinoPageRoute(builder: (context) => const SignupPage()), // iOS transition
                           );
                         },
                         child: const Text(
-                          "New User ?",
-                          style: TextStyle(color: Colors.blueAccent),
+                          "New User?",
+                          style: TextStyle(color: CupertinoColors.activeBlue, fontSize: 14),
                         ),
                       ),
-
-                      // 2. Forgot Password? -> Goes to Forgot Password Page
-                      TextButton(
+                      CupertinoButton(
+                        padding: EdgeInsets.zero,
                         onPressed: () {
                           Navigator.push(
                             context,
-                            MaterialPageRoute(builder: (context) => const ForgotPasswordPage()),
+                            CupertinoPageRoute(builder: (context) => const ForgotPasswordPage()), // iOS transition
                           );
                         },
                         child: const Text(
                           "Forgot your password?",
-                          style: TextStyle(color: Colors.black54),
+                          style: TextStyle(color: CupertinoColors.systemGrey, fontSize: 14),
                         ),
                       ),
                     ],
                   ),
 
-                  if (authState.hasError)
-                    Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Text(
-                        authState.error.toString(),
-                        style: const TextStyle(color: Colors.red),
-                      ),
-                    ),
-
                   SizedBox(height: ResponsiveHelper.screenHeight(context) * 0.03),
 
+                  // 🚀 iOS Style Button & Loading Indicator
                   authState.isLoading
-                      ? const CircularProgressIndicator()
-                      : ElevatedButton(
-                    onPressed: handleLogin, // Calls our new function
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.red,
-                      minimumSize: Size(double.infinity,
-                          ResponsiveHelper.screenHeight(context) * 0.065),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(30),
-                      ),
-                    ),
-                    child: const Text(
-                      "Sign in",
-                      style: TextStyle(
+                      ? const CupertinoActivityIndicator(radius: 16) // Native iOS Spinner
+                      : SizedBox(
+                    width: double.infinity,
+                    child: CupertinoButton(
+                      color: Colors.red, // GNW Theme Color
+                      borderRadius: BorderRadius.circular(30),
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      onPressed: handleLogin,
+                      child: const Text(
+                        "Sign in",
+                        style: TextStyle(
                           color: Colors.white,
                           fontSize: 20,
-                          fontWeight: FontWeight.bold),
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ),
                   ),
                 ],

@@ -182,7 +182,7 @@ class _HomepageState extends ConsumerState<Homepage> {
                                 Padding(
                                   padding: const EdgeInsets.symmetric(horizontal: 5.0),
                                   child: ElevatedButton.icon(
-                                    onPressed: _logout,
+                                    onPressed: _refreshData, // _logout krna hai isko bad me
                                     style: ElevatedButton.styleFrom(
                                       backgroundColor: Colors.red,
                                       foregroundColor: Colors.white,
@@ -195,7 +195,7 @@ class _HomepageState extends ConsumerState<Homepage> {
                                     ),
                                     icon: Icon(Icons.logout_outlined, size: 16 * wScale),
                                     label: Text(
-                                      'Logout or Refresh',
+                                      'Refresh',
                                       style: TextStyle(fontSize: 12 * wScale, fontWeight: FontWeight.bold),
                                     ),
                                   ),

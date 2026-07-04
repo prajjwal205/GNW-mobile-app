@@ -9,18 +9,49 @@ import '../widget/doctor_contact_info.dart';
 import '../widget/doctor_call_button.dart';
 
 // 1. Provider ab ClientModel ki list return karega
+// 1. Provider ab ClientModel ki list return karega
 final serviceListProvider = FutureProvider.family.autoDispose<List<ClientModel>, int>((ref, subCategoryId) async {
 
-  final clientList = await AuthService.ClientData(subCategoryId);
+  final allClients = await AuthService.ClientData(subCategoryId);
 
-  // 🚀 Sort the list alphabetically (Case-insensitive)
-  // NOTE: Replace `.name`   with the actual property name inside your ClientModel
-  // (It might be .clientName, .businessName, or .title depending on your model)
-  clientList.sort((a, b) => a.clientName.toLowerCase().compareTo(b.clientName.toLowerCase()));
+  // 🚀 Sirf Date nikal rahe hain, Time ko zero kar diya for accurate comparison
+  final DateTime currentDateTime = DateTime.now();
+  final DateTime todayDate = DateTime(currentDateTime.year, currentDateTime.month, currentDateTime.day);
 
-  return clientList;
-  // 🚀 Tumhare AuthService ka naya function call ho raha hai
-  // return await AuthService.ClientData(subCategoryId);
+  // Filter Logic Start
+  final filteredClients = allClients.where((client) {
+
+    // 1. Check if IsActive is true
+    if (!client.isActive) return false;
+
+    // 2. Start Date (CreatedOn) Check
+    if (client.CreatedOn != null) {
+      final DateTime startDate = DateTime(client.CreatedOn!.year, client.CreatedOn!.month, client.CreatedOn!.day);
+      if (todayDate.isBefore(startDate)) {
+        return false;
+      }
+    }
+
+    // 3. End Date Check: Expire toh nahi ho gaya?
+    if (client.EndDate != null) {
+      // 0001-01-01 ko bypass karne ke liye
+      if (client.EndDate!.year > 1) {
+        final DateTime endDate = DateTime(client.EndDate!.year, client.EndDate!.month, client.EndDate!.day);
+
+        if (todayDate.isAfter(endDate)) {
+          return false; // Hide if today is after the end date
+        }
+      }
+    }
+
+    return true;
+  }).toList();
+
+  // Alphabetical sorting
+  filteredClients.sort((a, b) => a.clientName.toLowerCase().compareTo(b.clientName.toLowerCase()));
+
+  return filteredClients;
+
 });
 
 class ServiceListPage extends ConsumerStatefulWidget {

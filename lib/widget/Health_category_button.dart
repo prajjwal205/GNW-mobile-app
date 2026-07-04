@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-// import '../utils/responsive_helper.dart'; // Uncomment if you use your helper
 
 class CategoryButton extends StatelessWidget {
   final String title;
@@ -25,10 +24,11 @@ class CategoryButton extends StatelessWidget {
         decoration: BoxDecoration(
           color: Colors.white, // Clean white background
           borderRadius: BorderRadius.circular(30),
-          border: Border.all(color: color.withOpacity(0.5), width: 1.5), // Colored Border
+          border: Border.all(color: color.withValues(alpha: 0.5),
+              width: 1.5), // Colored Border
           boxShadow: [
             BoxShadow(
-              color: color.withOpacity(0.1),
+              color: color.withValues(alpha: 0.1),
               blurRadius: 4,
               offset: const Offset(0, 2),
             ),
@@ -41,7 +41,7 @@ class CategoryButton extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(6),
               decoration: BoxDecoration(
-                color: color.withOpacity(0.1),
+                color: color.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
               child: Icon(icon, color: color, size: 18),

@@ -156,6 +156,7 @@ class CustomAppBar extends ConsumerWidget implements PreferredSizeWidget {
                             context,
                             MaterialPageRoute(builder: (_) => Profilepage()),
                           ),
+                          imgSize: 32,
                         ),
                         SizedBox(width: spacing),
 
@@ -166,18 +167,21 @@ class CustomAppBar extends ConsumerWidget implements PreferredSizeWidget {
                             MaterialPageRoute(builder: (_) => const Homepage()),
                                 (route) => false,
                           ),
+                          imgSize: 32,
                         ),
                         SizedBox(width: spacing),
 
                         ActionIcon(
                           icon: Icons.notifications,
                           onTap: () {},
+                          imgSize: 32,
                         ),
                         SizedBox(width: spacing,),
                         ActionIcon(
                           imagePath: 'lib/images/SOS_ICON.png',
                           onTap: () => _dialSOS(context),
                           icon: null,
+                          imgSize: 32,
                         ),
                         // const SizedBox(width: 0),
                         // _buildPopupMenu(context, ref),
@@ -207,17 +211,19 @@ class ActionIcon extends StatelessWidget {
   final IconData? icon;
   final VoidCallback onTap;
   final String? imagePath;
+  final double imgSize;
 
   const ActionIcon({
     super.key,
     this.icon,
     required this.onTap,
     this.imagePath,
+    required this.imgSize,
   });
 
   @override
   Widget build(BuildContext context) {
-    final double size = ResponsiveHelper.getIconSize(context, baseSize: 36);
+    final double size = imgSize ?? ResponsiveHelper.getIconSize(context, baseSize: 36);
 
     return SizedBox(
       width: size,
@@ -230,13 +236,13 @@ class ActionIcon extends StatelessWidget {
               ? Container(
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              border: Border.all(color: Colors.black, width: 4.5),
+              border: Border.all(color: Colors.black, width: 3.5),
             ),
             child: ClipOval(
               child: Image.asset(
                 imagePath!,
-                width: size * 0.9,
-                height: size * 0.9,
+                width: imgSize * 0.6,
+                height: imgSize * 0.6,
                 fit: BoxFit.cover,
               ),
             ),

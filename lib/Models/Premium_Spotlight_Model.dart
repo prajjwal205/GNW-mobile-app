@@ -1,38 +1,12 @@
-class SponsorResponseModel {
-  final int responseCode;
-  final String message;
-  final List<SponsorModel> data;
-
-  SponsorResponseModel({
-    required this.responseCode,
-    required this.message,
-    required this.data,
-  });
-
-  factory SponsorResponseModel.fromJson(Map<String, dynamic> json) {
-    return SponsorResponseModel(
-      responseCode: json["ResponseCode"] ?? 500,
-      message: json["Message"] ?? "Unknown Error",
-      // Yahan hum JSON array ko Flutter List me convert kar rahe hain
-      data: json["Value"] != null
-          ? (json["Value"] as List).map((x) => SponsorModel.fromJson(x)).toList()
-          : [],
-    );
-  }
-}
-
-// ==========================================
-// 2. DATA MODEL (The Actual Data / Phone)
-// ==========================================
 class SponsorModel {
   final int id;
+  final int categoryMasterId; // 🚀 Nayi field JSON se
   final String clientName;
   final String description;
   final String phoneNumber;
-  final String email;
   final String? sponsorFile;
   final String sponsorProduct;
-  final String? sponsorFilePath; // Raw server path
+  final String? sponsorFilePath;
   final String sponsorType;
   final DateTime? startDate;
   final DateTime? endDate;
@@ -46,10 +20,10 @@ class SponsorModel {
 
   SponsorModel({
     required this.id,
+    required this.categoryMasterId,
     required this.clientName,
     required this.description,
     required this.phoneNumber,
-    required this.email,
     this.sponsorFile,
     required this.sponsorProduct,
     this.sponsorFilePath,
@@ -66,47 +40,52 @@ class SponsorModel {
   factory SponsorModel.fromJson(Map<String, dynamic> json) {
     return SponsorModel(
       id: json["Id"] ?? 0,
+      categoryMasterId: json["CategoryMasterId"] ?? 0, // 🚀 Nayi field mapped
       clientName: json["ClientName"] ?? "Unknown Client",
       description: json["Description"] ?? "",
       phoneNumber: json["PhoneNumber"] ?? "",
-      email: json["Email"] ?? "",
-      sponsorFile: json["SponsorFile"], // Can be null
+      sponsorFile: json["SponsorFile"], // null allowed
       sponsorProduct: json["SponsorProduct"] ?? "",
-      sponsorFilePath: json["SponsorFilePath"],
+      sponsorFilePath: json["SponsorFilePath"], // null allowed
       sponsorType: json["SponsorType"] ?? "UNKNOWN",
 
-      // DateTime parsing with null safety
-      startDate: json["StartDate"] != null ? DateTime.tryParse(json["StartDate"]) : null,
-      endDate: json["EndDate"] != null ? DateTime.tryParse(json["EndDate"]) : null,
-      createdOn: json["CreatedOn"] != null ? DateTime.tryParse(json["CreatedOn"]) : null,
-      updatedOn: json["UpdatedOn"] != null ? DateTime.tryParse(json["UpdatedOn"]) : null,
+      // 🚀 Date parsing with solid null safety
+      startDate: json["StartDate"] != null ? DateTime.tryParse(json["StartDate"].toString()) : null,
+      endDate: json["EndDate"] != null ? DateTime.tryParse(json["EndDate"].toString()) : null,
+      createdOn: json["CreatedOn"] != null ? DateTime.tryParse(json["CreatedOn"].toString()) : null,
+      updatedOn: json["UpdatedOn"] != null ? DateTime.tryParse(json["UpdatedOn"].toString()) : null,
 
       isActive: json["IsActive"] ?? false,
-      createdBy: json["CreatedBy"] ?? "system",
+      createdBy: json["CreatedBy"] ?? "System",
 
-      // 🚀 APKA IMAGE LOGIC: Same as DoctorModel, customized for Sponsors
+      // 🚀 IMAGE LOGIC: Postman ke "h:\\root\\..." path ko clean web URL me convert karega
       cleanImageUrl: (json["SponsorFilePath"] != null && json["SponsorFilePath"].toString().isNotEmpty)
-          ? _convertToImageUrl(json["SponsorFilePath"])
+          ? _convertToImageUrl(json["SponsorFilePath"].toString())
           : null,
     );
   }
 
+  // Backslashes (\) ko Forward slashes (/) me convert karne ka magic logic
   static String? _convertToImageUrl(String path) {
     if (path.isEmpty) return null;
 
     String normalizedPath = path.replaceAll(r"\", "/");
-    String baseUrl = "https://gnwbazaar.in/apigateway"; // Tumhari website ka domain
+
+    // Aapki website ka actual domain
+    String baseUrl = "https://gnwbazaar.in/apigateway";
     String finalUrl = "";
 
-    // Sponsor images ke folder ka naam dhoondh rahe hain
+    // Exact folder dhundhne ka logic taaki server ka aage ka kachra (h:/root/..) hat jaye
     int sponsorIndex = normalizedPath.indexOf("/SponsorImage/");
 
     if (sponsorIndex != -1) {
       finalUrl = baseUrl + normalizedPath.substring(sponsorIndex);
     } else {
+      // Fallback incase path format alag ho
       finalUrl = baseUrl + "/" + normalizedPath;
     }
 
+    // Spaces ko %20 me convert karega warna Flutter image load nahi karega
     return finalUrl.replaceAll(" ", "%20");
   }
 }

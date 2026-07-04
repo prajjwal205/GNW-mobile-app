@@ -10,6 +10,10 @@ class ClientModel {
   final String? imagePath;
   final bool isActive;
 
+  final DateTime? CreatedOn;
+  final DateTime? EndDate;
+
+
   ClientModel({
     required this.id,
     required this.clientName,
@@ -21,6 +25,8 @@ class ClientModel {
     this.locationUrl,
     this.imagePath,
     required this.isActive,
+    required this.CreatedOn,
+    required this.EndDate,
   });
 
   factory ClientModel.fromJson(Map<String, dynamic> json) {
@@ -40,6 +46,8 @@ class ClientModel {
           : null,
 
       isActive: json['IsActive'] ?? false,
+      CreatedOn: json["CreatedOn"] != null ? DateTime.tryParse(json["CreatedOn"]) : null,
+      EndDate: json["EndDate"] != null ? DateTime.tryParse(json["EndDate"]) : null,
     );
   }
 
@@ -49,7 +57,7 @@ class ClientModel {
 
     // 1. Slash badlo
     String normalizedPath = path.replaceAll(r"\", "/");
-    String baseUrl = "http://gnwbazaar-002-site2.qtempurl.com";
+    String baseUrl = "https://gnwbazaar.in/apigateway";
     String finalUrl = "";
 
     // 2. Client Image ka folder dhoondo (Dhyan do: Yahan /ClientImage/ dhoondha hai)
@@ -63,5 +71,31 @@ class ClientModel {
 
     // 3. Space hatakar URL safe banao
     return finalUrl.replaceAll(" ", "%20");
+  }
+  bool get isValid {
+    if (!isActive) return false;
+
+    final DateTime now = DateTime.now();
+    final String monthStr = now.month.toString().padLeft(2, '0');
+    final String dayStr = now.day.toString().padLeft(2, '0');
+    final int todayInt = int.parse("${now.year}$monthStr$dayStr");
+
+    // 1. Start Date Check
+    if (CreatedOn != null) {
+      final String startMonth = CreatedOn!.month.toString().padLeft(2, '0');
+      final String startDay = CreatedOn!.day.toString().padLeft(2, '0');
+      final int startInt = int.parse("${CreatedOn!.year}$startMonth$startDay");
+      if (todayInt < startInt) return false;
+    }
+
+    // 2. End Date Check
+    if (EndDate != null && EndDate!.year > 1) {
+      final String endMonth = EndDate!.month.toString().padLeft(2, '0');
+      final String endDay = EndDate!.day.toString().padLeft(2, '0');
+      final int endInt = int.parse("${EndDate!.year}$endMonth$endDay");
+      if (todayInt > endInt) return false;
+    }
+
+    return true;
   }
 }

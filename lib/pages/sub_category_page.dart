@@ -4,6 +4,7 @@ import 'package:gnw/services/auth_provider.dart';
 import '../widget/Sub_category_card_widget.dart';
 import '../widget/customAppBar.dart';
 import '../utils/responsive_helper.dart';
+import '../widget/sponsor_banner_widget.dart';
 import 'other_Listing.dart';
 
 class SubCategoryPage extends StatefulWidget {
@@ -70,22 +71,11 @@ class _SubCategoryPageState extends State<SubCategoryPage> {
 
               SliverToBoxAdapter(
                 child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(16),
-                    child: AspectRatio(
-                      aspectRatio: 16 / 6,
-                      child: Stack(
-                        children: [
-                          Positioned.fill(
-                            child: Image.asset(
-                              "lib/images/premium.jpeg",
-                              fit: BoxFit.cover,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  child: SponsorBannerWidget(
+                    bannerType: "PRIME SPOTLIGHT", // 🚀 JSON me jo exact type hai wahi likhna (e.g., "PRIME SPOTLIGHT")
+                    categoryId: widget.categoryMasterId, // 🚀 Jis page par ho uski ID pass kardo
+                    aspectRatio: 16 / 6,
                   ),
                 ),
               ),
