@@ -26,6 +26,7 @@ class SponsorResponseModel {
 // ==========================================
 class SponsorModel {
   final int id;
+  final int categoryMasterId; // 🚀 Yahan add kiya gaya hai
   final String clientName;
   final String description;
   final String phoneNumber;
@@ -46,6 +47,7 @@ class SponsorModel {
 
   SponsorModel({
     required this.id,
+    required this.categoryMasterId, // 🚀 Constructor mein bhi add kiya hai
     required this.clientName,
     required this.description,
     required this.phoneNumber,
@@ -66,6 +68,7 @@ class SponsorModel {
   factory SponsorModel.fromJson(Map<String, dynamic> json) {
     return SponsorModel(
       id: json["Id"] ?? 0,
+      categoryMasterId: json["CategoryMasterId"] ?? 0, // 🚀 JSON se fetch karne ke liye
       clientName: json["ClientName"] ?? "Unknown Client",
       description: json["Description"] ?? "",
       phoneNumber: json["PhoneNumber"] ?? "",
@@ -89,6 +92,26 @@ class SponsorModel {
           ? _convertToImageUrl(json["SponsorFilePath"])
           : null,
     );
+  }
+  Map<String, dynamic> toJson() {
+    return {
+      "Id": id,
+      "CategoryMasterId": categoryMasterId,
+      "ClientName": clientName,
+      "Description": description,
+      "PhoneNumber": phoneNumber,
+      "Email": email,
+      "SponsorFile": sponsorFile,
+      "SponsorProduct": sponsorProduct,
+      "SponsorFilePath": sponsorFilePath,
+      "SponsorType": sponsorType,
+      "StartDate": startDate?.toIso8601String(),
+      "EndDate": endDate?.toIso8601String(),
+      "IsActive": isActive,
+      "CreatedBy": createdBy,
+      "CreatedOn": createdOn?.toIso8601String(),
+      "UpdatedOn": updatedOn?.toIso8601String(),
+    };
   }
 
   static String? _convertToImageUrl(String path) {

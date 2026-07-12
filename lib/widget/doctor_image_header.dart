@@ -190,7 +190,7 @@ class DoctorImageHeader extends StatelessWidget {
                                   borderRadius: BorderRadius.circular(14 * wScale),
                                   child: targetImageUrl.isNotEmpty
                                       ? CachedNetworkImage(imageUrl: targetImageUrl, width: double.infinity, fit: BoxFit.contain, placeholder: (context, url) => const Center(child: CircularProgressIndicator(color: Color(0xFFFFA726))), errorWidget: (context, url, error) => const Icon(Icons.local_hospital, color: Colors.white, size: 50))
-                                      : Image.asset('lib/images/sample.jpeg', width: double.infinity, fit: BoxFit.contain),
+                                      : Image.asset('lib/images/img.png', width: double.infinity, fit: BoxFit.contain),
                                 ),
                               ),
                             ),
@@ -218,8 +218,9 @@ class DoctorImageHeader extends StatelessWidget {
                               child: CircularProgressIndicator(color: Color(0xFFFFA726)))),
                       errorWidget: (context, url, error) => Container(
                           height: 350 * wScale, color: Colors.grey[200],
-                          child: Icon(Icons.local_hospital, size: 50 * wScale)))
-                      : Image.asset('lib/images/sample.jpeg', width: double.infinity, fit: BoxFit.fitWidth),
+                          // child: Icon(Icons.local_hospital, size: 50 * wScale),
+                      ))
+                      : Image.asset('lib/images/img.png', width: double.infinity, fit: BoxFit.fitWidth),
                 ),
               ),
             ),

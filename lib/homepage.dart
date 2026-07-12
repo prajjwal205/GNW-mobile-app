@@ -8,10 +8,12 @@ import 'package:gnw/utils/SucessButton.dart';
 import 'package:gnw/utils/responsive_helper.dart';
 import 'package:gnw/widget/customAppBar.dart';
 import 'package:gnw/widget/floating_search_widget.dart';
+import 'package:gnw/widget/loading_Overlay.dart';
 import 'package:gnw/widget/sponsor_banner_widget.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
 import 'login_signup page/login.dart'; // Make sure the path matches where you saved it!
+import 'package:gnw/providers/sponsor_notifier.dart';
+import 'package:gnw/services/update_service.dart';
 
 final userNameProvider = FutureProvider.autoDispose<String>((ref) async {
   return await AuthService.fetchUserName();
@@ -30,7 +32,28 @@ class Homepage extends ConsumerStatefulWidget {
   ConsumerState<Homepage> createState() => _HomepageState();
 }
 class _HomepageState extends ConsumerState<Homepage> {
+  bool _forceHideOverlay = false;
+  bool _minTimeElapsed = false;
 
+  @override
+
+  void initState() {
+    super.initState();
+    UpdateService.checkForUpdate();
+    Future.delayed(const Duration(seconds: 3), () {
+      if (mounted) {
+        setState(() {
+          _minTimeElapsed = true; // 3 second pure ho gaye
+        });
+      }
+    });
+  }
+
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // This loads the image into memory early so it shows instantly
+    precacheImage(const AssetImage('lib/images/APP_DESIGN.png'), context);
+  }
   Future<void> _refreshData() async {
     // 1. Invalidate providers to force a reload
     ref.invalidate(userNameProvider);
@@ -123,6 +146,10 @@ class _HomepageState extends ConsumerState<Homepage> {
     // --- WATCHING DATA FROM PROVIDERS ---
     // final userAsync = ref.watch(userNameProvider);
     final categoriesAsync = ref.watch(categoriesProvider);
+    final sponsorAsync = ref.watch(sponsorNotifierProvider);
+
+    bool isDataLoading = categoriesAsync.isLoading || sponsorAsync.isLoading;    bool showOverlay = !_forceHideOverlay && (isDataLoading || !_minTimeElapsed);
+
     double wScale = ResponsiveHelper.screenWidth(context) / 390.0;
 
     return MediaQuery(
@@ -131,7 +158,9 @@ class _HomepageState extends ConsumerState<Homepage> {
       child: Scaffold(
         backgroundColor: Colors.white,
         appBar: CustomAppBar(appBarHeight: ResponsiveHelper.getAppBarHeight(context)),
-        body: SafeArea(
+        body:Stack(
+            children: [
+            SafeArea(
           child: RefreshIndicator(
             onRefresh: _refreshData,
             color: Colors.white,
@@ -177,29 +206,29 @@ class _HomepageState extends ConsumerState<Homepage> {
                             padding: const EdgeInsets.all(40.0),
                             child: Column(
                               children: [
-                                Icon(Icons.category_outlined, size: 60, color: Colors.grey.shade400),
+                                Text("Please close App completely and reopen"),
                                 const SizedBox(height: 16),
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 5.0),
-                                  child: ElevatedButton.icon(
-                                    onPressed: _refreshData, // _logout krna hai isko bad me
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: Colors.red,
-                                      foregroundColor: Colors.white,
-                                      // 🚀 Padding kam kar di
-                                      padding: EdgeInsets.symmetric(horizontal: 12 * wScale, vertical: 8 * wScale),
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(12 * wScale),
-                                      ),
-                                      elevation: 0,
-                                    ),
-                                    icon: Icon(Icons.logout_outlined, size: 16 * wScale),
-                                    label: Text(
-                                      'Refresh',
-                                      style: TextStyle(fontSize: 12 * wScale, fontWeight: FontWeight.bold),
-                                    ),
-                                  ),
-                                ),
+                                // Padding(
+                                //   padding: const EdgeInsets.symmetric(horizontal: 5.0),
+                                //   child: ElevatedButton.icon(
+                                //     onPressed: _refreshData, // _logout krna hai isko bad me
+                                //     // style: ElevatedButton.styleFrom(
+                                //     //   backgroundColor: Colors.red,
+                                //     //   foregroundColor: Colors.white,
+                                //     //   // 🚀 Padding kam kar di
+                                //     //   padding: EdgeInsets.symmetric(horizontal: 12 * wScale, vertical: 8 * wScale),
+                                //     //   shape: RoundedRectangleBorder(
+                                //     //     borderRadius: BorderRadius.circular(12 * wScale),
+                                //     //   ),
+                                //     //   elevation: 0,
+                                //     // ),
+                                //     icon: Icon(Icons.logout_outlined, size: 16 * wScale),
+                                //     label: Text(
+                                //       'Refresh',
+                                //       style: TextStyle(fontSize: 12 * wScale, fontWeight: FontWeight.bold),
+                                //     ),
+                                //   ),
+                                // ),
                                 // TextButton(
                                 //   onPressed: _refreshData,
                                 //   child: const Text("Tap to Refresh"),
@@ -302,6 +331,16 @@ class _HomepageState extends ConsumerState<Homepage> {
             ),
           ),
         ),
+              if (showOverlay)
+                LoadingOverlay(
+                  onClose: () {
+                    // Jab user 'X' dabaye ya click kare, overlay turant hide ho jaye
+                    setState(() {
+                      _forceHideOverlay = true;
+                    });
+                  },
+                ),        ],
+      ),
       ),
     );
   }

@@ -272,13 +272,13 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:gnw/Models/Sponsor_model.dart';
 import 'package:gnw/services/auth_provider.dart';
 
-final sponsorProvider = FutureProvider.autoDispose<List<SponsorModel>>((ref) async {
+final sponsorProvider = FutureProvider<List<SponsorModel>>((ref) async {
   final timer = Timer(const Duration(seconds: 300), () => ref.invalidateSelf());
   ref.onDispose(() => timer.cancel());
   return await AuthService.fetchSponsor();
 });
 
-final categorySponsorProvider = FutureProvider.family.autoDispose<List<SponsorModel>, int>((ref, categoryId) async {
+final categorySponsorProvider = FutureProvider.family<List<SponsorModel>, int>((ref, categoryId) async {
   final timer = Timer(const Duration(seconds: 300), () => ref.invalidateSelf());
   ref.onDispose(() => timer.cancel());
   return await AuthService.fetchSponsorsByCategory(categoryId);
@@ -368,10 +368,13 @@ class _SponsorBannerWidgetState extends ConsumerState<SponsorBannerWidget> {
               return CachedNetworkImage(
                 imageUrl: banners.first.cleanImageUrl!,
                 fit: BoxFit.cover,
-                placeholder: (context, url) => const Center(child: CircularProgressIndicator(color: Color(0xFFFFA726))),
-
+                placeholder: (context, url) =>
+                    Image.asset(
+                      "lib/images/ad.jpg",
+                      fit: BoxFit.cover,
+                    ),
                 errorWidget: (context, url, error) => Image.asset(
-                  "lib/images/premium.jpeg",
+                  "lib/images/ad.jpg",
                   fit: BoxFit.cover,
                 ),
               );
@@ -394,7 +397,7 @@ class _SponsorBannerWidgetState extends ConsumerState<SponsorBannerWidget> {
                     placeholder: (context, url) => const Center(child: CircularProgressIndicator(color: Color(0xFFFFA726))),
 
                     errorWidget: (context, url, error) => Image.asset(
-                      "lib/images/premium.jpeg",
+                      "lib/images/ad.jpg",
                       fit: BoxFit.cover,
                     ),
                   );

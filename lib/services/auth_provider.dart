@@ -7,7 +7,6 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:gnw/Models/healthcare_model.dart';
-
 import '../Models/Profile_Model_class.dart';
 import '../Models/SubCategoryModel.dart';
 // import '../pages/ProfilePage.dart';
@@ -62,13 +61,20 @@ class AuthService {
 
         try {
           final profileUrl = "$domain/Get_User/$UserId";
+          final sw = Stopwatch()..start();
           final profileResponse = await http.get(
               Uri.parse(profileUrl),
               headers: {
                 "Content-Type": "application/json",
                 "Authorization": "Bearer $accessToken"
+
               }
           );
+
+          sw.stop();
+          print("HTTP GET Time : ${sw.elapsedMilliseconds} ms");
+
+
 
           if (profileResponse.statusCode == 200) {
             final profileData = jsonDecode(profileResponse.body);
@@ -556,12 +562,32 @@ class AuthService {
   static Future<List<SponsorModel>> fetchSponsor() async{
     try {
       final auth = AuthService();
+      final watch = Stopwatch()..start();
       final response = await auth.authorizedGet(sponsorUrl);
+
+      watch.stop();
+      print("Sponsor API Time: ${watch.elapsedMilliseconds} ms");
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         if (response.statusCode != 200) {
           throw Exception("Server Error");
         }
+
+        final parseWatch = Stopwatch()..start();
+
+        final list = data['Value'] as List;
+
+        List<SponsorModel> validSponsors = [];
+
+        for (var item in list) {
+          SponsorModel sponsor = SponsorModel.fromJson(item);
+          validSponsors.add(sponsor);
+        }
+
+        parseWatch.stop();
+        print("Parsing Time : ${parseWatch.elapsedMilliseconds} ms");
+
+
         if (data['Value'] != null && data['Value'] is List) {
           final list = data['Value'] as List;
           final DateTime now = DateTime.now();
@@ -686,6 +712,24 @@ class AuthService {
   Future<void> logout() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.clear();
+  }
+  // Add these methods INSIDE your class AuthService { ... }
+
+  static Future<void> cacheSponsors(List<SponsorModel> sponsors) async {
+    final prefs = await SharedPreferences.getInstance();
+    // Convert List to JSON string
+    String jsonString = jsonEncode(sponsors.map((e) => e.toJson()).toList());
+    await prefs.setString('cached_sponsors', jsonString);
+  }
+
+  static Future<List<SponsorModel>?> getCachedSponsors() async {
+    final prefs = await SharedPreferences.getInstance();
+    String? jsonString = prefs.getString('cached_sponsors');
+    if (jsonString == null) return null;
+
+    // Decode JSON string back to List
+    Iterable l = jsonDecode(jsonString);
+    return List<SponsorModel>.from(l.map((model) => SponsorModel.fromJson(model)));
   }
 }
 
