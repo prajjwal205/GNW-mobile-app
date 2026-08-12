@@ -1,3 +1,15 @@
+plugins {
+    // Firebase services plugin (jo aapke text mein 4.5.0 likha hai)
+    id("com.google.gms.google-services") version "4.5.0" apply false
+
+    // Crashlytics plugin (Ye line extra add karni hai errors ke liye)
+    id("com.google.firebase.crashlytics") version "2.9.9" apply false
+}
+
+// Yahan se aapka purana 'allprojects { ... }' wala code continue hoga...
+allprojects {
+    // ...
+}
 allprojects {
     repositories {
         google()

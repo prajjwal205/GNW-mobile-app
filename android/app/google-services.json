@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "438834589175",
+    "project_id": "gnwbazaar-24520",
+    "storage_bucket": "gnwbazaar-24520.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:438834589175:android:c6d12eb64f39ea664b12f2",
+        "android_client_info": {
+          "package_name": "com.gnwbazaar.gnw"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBJl_1HTkkMvjEZNsr3qW8Ltg-J4XdMIHs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

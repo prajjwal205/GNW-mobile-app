@@ -1,6 +1,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
 
 
     <application
@@ -8,6 +9,14 @@
         android:label="GNW Bazaar"
         android:icon="@mipmap/ic_launcher"
         android:usesCleartextTraffic="true">
+
+
+        // maine yhi add ki thi
+        <meta-data
+            android:name="io.flutter.app.android.EnableImpeller"
+            android:value="false" />
+
+        // ye upper tkk
         <activity
             android:name=".MainActivity"
             android:exported="true"

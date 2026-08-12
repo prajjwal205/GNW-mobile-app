@@ -5,6 +5,10 @@ plugins {
     id("com.android.application")
     id("kotlin-android")
     id("dev.flutter.flutter-gradle-plugin")
+
+    // Neeche wali dono lines add karein:
+    id("com.google.gms.google-services")
+    id("com.google.firebase.crashlytics")
 }
 
 val keystoreProperties = Properties()
@@ -17,7 +21,7 @@ if (keystorePropertiesFile.exists()) {
 android {
     namespace = "com.gnwbazaar.gnw"
     compileSdk = flutter.compileSdkVersion
-    ndkVersion = "27.0.12077973"
+    ndkVersion = "28.2.13676358"
 
     defaultConfig {
         applicationId = "com.gnwbazaar.gnw"
@@ -48,9 +52,22 @@ android {
     buildTypes {
         getByName("release") {
             signingConfig = signingConfigs.getByName("release")
+
+//            isMinifyEnabled = true
+//            isShrinkResources = true
+//
+//            proguardFiles(
+//                getDefaultProguardFile("proguard-android-optimize.txt"),
+//                "proguard-rules.pro"
+//            )
         }
     }
 }
+
+//dependencies {
+//    implementation("com.google.android.play:feature-delivery:2.1.0")
+//    implementation("com.google.android.play:review:2.0.2")
+//}
 
 flutter {
     source = "../.."

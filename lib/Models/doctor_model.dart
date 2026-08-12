@@ -116,6 +116,9 @@ class DoctorModel {
   final DateTime? createdOn;
   final DateTime? endDate;
 
+  final String locationUrl; // <-- ye line add karo
+
+
   DoctorModel({
     required this.id,
     required this.name,
@@ -134,6 +137,7 @@ class DoctorModel {
 
     required this.createdOn,
     required this.endDate,
+    required this.locationUrl,
   });
 
   factory DoctorModel.fromJson(Map<String, dynamic> json) {
@@ -166,6 +170,9 @@ class DoctorModel {
       // 🚀 Yahan dono jagah .toString() laga diya taaki parsing safe rahe
       createdOn: json["CreatedOn"] != null ? DateTime.tryParse(json["CreatedOn"].toString()) : null,
       endDate: json["EndDate"] != null ? DateTime.tryParse(json["EndDate"].toString()) : null,
+
+
+      locationUrl: json['locationUrl'] ?? '',
     );
   }
 

@@ -1,3 +1,6 @@
+import 'dart:async';
+import 'dart:io';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gnw/Models/Sponsor_model.dart';
 import 'package:gnw/Models/category_model.dart';
@@ -37,12 +40,11 @@ class AuthService {
       String password,
       ) async {
     try {
-      // 1. LOGIN KI API CALL
       final response = await http.post(
         Uri.parse(loginUrl),
         headers: {"Content-Type": "application/x-www-form-urlencoded"},
         body: {"Email": email, "Password": password},
-      );
+      ).timeout(const Duration(seconds: 20));
 
       if (response.body.isEmpty) return {"success": false, "message": "Empty response"};
       final data = jsonDecode(response.body);
@@ -89,14 +91,42 @@ class AuthService {
               await prefs.setString("user_phone", val["PhoneNumber"] ?? "");
             }
           }
-        } catch (profileError) {
+        } catch (e, s) {
+          await FirebaseCrashlytics.instance.recordError(e, s);
         }
 
         return {"success": true};
       }
       return {"success": false, "message": data["Message"]};
-    } catch (e) {
-      return {"success": false, "message": e.toString()};
+    } on SocketException catch (e, s) {
+      await FirebaseCrashlytics.instance.recordError(e, s);
+
+      return {
+        "success": false,
+        "message": "No Internet Connection",
+      };
+    } on TimeoutException catch (e, s) {
+      // 🚀 SLOW INTERNET HONE PAR AB YEH CHALEGA
+      await FirebaseCrashlytics.instance.recordError(e, s);
+      return {
+        "success": false,
+        "message": "Internet is too slow. Please try again.",
+      };
+    } on FormatException catch (e, s) {
+      await FirebaseCrashlytics.instance.recordError(e, s);
+
+      return {
+        "success": false,
+        "message": "Invalid Server Response",
+      };
+    }
+    catch (e, s) {
+      await FirebaseCrashlytics.instance.recordError(e, s);
+
+      return {
+        "success": false,
+        "message": e.toString(),
+      };
     }
   }
 
@@ -159,50 +189,128 @@ class AuthService {
       } else {
         return false;
       }
-    } catch (e) {
-      // print(" Exception in refreshToken logic: $e");
+    } catch (e, s) {
+      await FirebaseCrashlytics.instance.recordError(e, s);
       return false;
     }
    }
 
 
-   Future<http.Response> authorizedGet(String url) async {
-    final prefs = await SharedPreferences.getInstance();
-    String token = prefs.getString('auth_token') ?? '';
-    // print("TOKEN : = ${token}, end");
 
+  Future<http.Response> authorizedGet(String url) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      String token = prefs.getString('auth_token') ?? '';
 
-    var response = await http.get(
-      Uri.parse(url),
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": "Bearer $token",
-      },
-    );
+      http.Response response = await http
+          .get(
+        Uri.parse(url),
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer $token",
+        },
+      )
+          .timeout(const Duration(seconds: 20));
 
-    if (response.statusCode == 401) {
-      bool refreshed = await refreshToken();
+      // If token expired, refresh once
+      if (response.statusCode == 401) {
+        final refreshed = await refreshToken();
 
-      if (refreshed) {
+        if (!refreshed) {
+          await logout();
+          throw Exception("Session Expired");
+        }
+
         token = prefs.getString('auth_token') ?? '';
-        // print("TOKEN : = ${token}, end");
 
-
-        response = await http.get(
+        response = await http
+            .get(
           Uri.parse(url),
           headers: {
             "Content-Type": "application/json",
             "Authorization": "Bearer $token",
           },
-        );
-      } else {
-        // refresh failed → logout
-        await logout();
+        )
+            .timeout(const Duration(seconds: 25));
       }
+
+      // Server errors
+      if (response.statusCode >= 500) {
+        throw HttpException(
+          "Server Error : ${response.statusCode}",
+        );
+      }
+
+      return response;
     }
 
-    return response;
+    on SocketException {
+      throw Exception("No Internet Connection");
     }
+
+    on TimeoutException {
+      throw Exception("Server Responding Slow\nPlease try again.");
+    }
+
+    on FormatException catch (e, s) {
+      await FirebaseCrashlytics.instance.recordError(e,s,
+        reason: "authorizedGet FormatException",
+      );
+
+      throw Exception("Invalid server response.");
+    }
+
+    catch (e, s) {
+      await FirebaseCrashlytics.instance.recordError(
+        e,
+        s,
+        reason: "authorizedGet Unexpected Error",
+      );
+      throw Exception(e.toString());
+    }
+  }
+
+
+   //
+   //
+   // Future<http.Response> authorizedGet(String url) async {
+   //  final prefs = await SharedPreferences.getInstance();
+   //  String token = prefs.getString('auth_token') ?? '';
+   //  // print("TOKEN : = ${token}, end");
+   //
+   //
+   //  var response = await http.get(
+   //    Uri.parse(url),
+   //    headers: {
+   //      "Content-Type": "application/json",
+   //      "Authorization": "Bearer $token",
+   //    },
+   //  )
+   //      .timeout(const Duration(seconds: 20));
+   //
+   //  if (response.statusCode == 401) {
+   //    bool refreshed = await refreshToken();
+   //
+   //    if (refreshed) {
+   //      token = prefs.getString('auth_token') ?? '';
+   //      // print("TOKEN : = ${token}, end");
+   //
+   //
+   //      response = await http.get(
+   //        Uri.parse(url),
+   //        headers: {
+   //          "Content-Type": "application/json",
+   //          "Authorization": "Bearer $token",
+   //        },
+   //      );
+   //    } else {
+   //      // refresh failed → logout
+   //      await logout();
+   //    }
+   //  }
+   //
+   //  return response;
+   //  }
   // 2. Signup Method
    Future<Map<String, dynamic>> signup(
       String name, String email, String phone, String password) async {
@@ -282,10 +390,11 @@ class AuthService {
     } catch (e) { return {"success": false, "message": "Connection Error"}; }
    }
 
-   static Future<List<CategoryModel>> fetchCategories() async {
+  static Future<List<CategoryModel>> fetchCategories() async {
     try {
+      // throw Exception("Server Error (Code: 00)");
+      // await Future.delayed(const Duration(seconds: 35));
       final auth = AuthService();
-
       final response = await auth.authorizedGet(categoryUrl);
 
       if (response.statusCode == 200) {
@@ -295,14 +404,18 @@ class AuthService {
           final list = data['Value'] as List;
           return list.map((e) => CategoryModel.fromJson(e)).toList();
         }
-      }
+        return []; // Data sahi hai par list khali hai
+      } else {
 
-      return [];
-    } catch (e) {
-      // print("Error fetching categories: $e");
-      return [];
-    }
-    }
+        throw Exception("Server Error (Code: ${response.statusCode})");
+      }
+    } catch (e, s) {
+      await FirebaseCrashlytics.instance.recordError(e, s);
+
+      // 🚀 MAGIC FIX: Empty list mat return karo! Exception UI tak pahunchne do.
+      // Tumhara authorizedGet already HttpException throw karta hai, usko aage jaane do.
+      rethrow;    }
+  }
 
    static Future<String> fetchUserName() async {
     final prefs = await SharedPreferences.getInstance();
@@ -329,7 +442,8 @@ class AuthService {
       }
 
       return [];
-    } catch (e) {
+    } catch (e, s) {
+      await FirebaseCrashlytics.instance.recordError(e, s);
       return [];
     }
   }
@@ -383,8 +497,8 @@ class AuthService {
         }
       }
       return [];
-    } catch (e){
-      // print("Error fetching clients: $e");
+    } catch (e, s) {
+      await FirebaseCrashlytics.instance.recordError(e, s);
       return [];
     }
 }
@@ -407,8 +521,8 @@ class AuthService {
         }
       }
       return [];
-    } catch (e) {
-      // print("Error fetching all clients: $e");
+    } catch (e, s) {
+      await FirebaseCrashlytics.instance.recordError(e, s);
       return [];
     }
   }
@@ -504,8 +618,8 @@ class AuthService {
         }
       }
       return [];
-    } catch (e) {
-      // print("Error fetching all subcategories: $e");
+    } catch (e, s) {
+      await FirebaseCrashlytics.instance.recordError(e, s);
       return [];
     }
   }
@@ -525,8 +639,8 @@ class AuthService {
               .toList();        }
       }
       return[];
-    }catch (e) {
-      // print("Error fetching subcategories: $e");
+    }catch (e, s) {
+      await FirebaseCrashlytics.instance.recordError(e, s);
       return [];
     }
   }
@@ -553,7 +667,8 @@ class AuthService {
       }
 
       return [];
-    } catch (e) {
+    } catch (e, s) {
+      await FirebaseCrashlytics.instance.recordError(e, s);
       return [];
     }
   }
@@ -616,9 +731,9 @@ class AuthService {
       } else {
         throw Exception("Server Error: ${response.statusCode}");
       }
-    }catch (e) {
-      // print(" Error fetching sponsors: $e");
-      rethrow;
+    }catch (e, s) {
+      await FirebaseCrashlytics.instance.recordError(e, s);
+      return [];
     }
   }
 
@@ -664,7 +779,8 @@ class AuthService {
         }
       }
       return [];
-    } catch (e) {
+    } catch (e, s) {
+      await FirebaseCrashlytics.instance.recordError(e, s);
       return [];
     }
   }
@@ -704,7 +820,8 @@ class AuthService {
       }
       return [];
     }
-    catch (e) {
+    catch (e, s) {
+      await FirebaseCrashlytics.instance.recordError(e, s);
       return [];
     }
   }
@@ -751,7 +868,7 @@ class AuthController extends StateNotifier<AsyncValue<void>> {
     final result = await _authService.login(email, password);
     state = const AsyncValue.data(null);
 
-    return result['success'] == true ? null : result['messagen'];
+    return result['success'] == true ? null : result['message'];
   }
 
   // SIGNUP model class

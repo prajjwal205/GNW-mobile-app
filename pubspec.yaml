@@ -3,7 +3,7 @@ description: "A new Flutter project."
 publish_to: 'none'
 
 
-version: 1.0.3+7
+version: 1.1.4+8
 
 environment:
   sdk: ^3.8.1
@@ -20,10 +20,20 @@ dependencies:
   http: ^1.2.1
   shared_preferences: ^2.3.2
   share_plus: ^12.0.1
-  url_launcher: ^6.3.0
+  url_launcher: ^6.3.2
   cached_network_image: ^3.4.1
   intl: ^0.19.0
   in_app_update: ^4.2.5
+  firebase_core: ^4.12.1
+  firebase_crashlytics: ^5.2.6
+  fluttertoast: ^9.1.0
+  firebase_messaging: ^16.4.3
+  firebase_in_app_messaging: ^0.9.2+6
+  path_provider: ^2.1.1
+  flutter_cache_manager: ^3.4.2
+  syncfusion_flutter_pdfviewer: ^33.2.13
+  open_filex: ^4.7.0
+  shimmer: ^3.0.0
 
 
 dev_dependencies:
@@ -45,6 +55,8 @@ flutter:
 
   assets:
     - assets/adi-registration.properties
+    - assets/security_certificate.crt
     - lib/images/
     - lib/icons/
     - lib/icons/user.svg
+    - lib/PDF/Doctors.pdf
