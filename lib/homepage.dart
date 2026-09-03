@@ -11,7 +11,7 @@
   import 'package:gnw/widget/custom_error_widget.dart';
   import 'package:gnw/widget/floating_search_widget.dart';
 import 'package:gnw/widget/google_form.dart';
-  import 'package:gnw/widget/loading_Overlay.dart';
+  import 'package:gnw/widget/Flash_screen.dart';
   import 'package:gnw/widget/sponsor_banner_widget.dart';
   import 'package:shared_preferences/shared_preferences.dart';
   import 'login_signup page/login.dart'; // Make sure the path matches where you saved it!
@@ -43,7 +43,7 @@ import 'package:gnw/widget/google_form.dart';
     void initState() {
       super.initState();
       UpdateService.checkForUpdate();
-      Future.delayed(const Duration(seconds: 3), () {
+      Future.delayed(const Duration(seconds: 8), () {
         if (mounted) {
           setState(() {
             _minTimeElapsed = true; // 3 second pure ho gaye
@@ -173,7 +173,7 @@ import 'package:gnw/widget/google_form.dart';
                 physics: const BouncingScrollPhysics(
                     parent: AlwaysScrollableScrollPhysics()),
                 slivers: [
-                  // --- TOP BANNER & SEARCH ---
+                  // --- TOP BAN  NER & SEARCH ---
                   SliverToBoxAdapter(
                     child: Padding(
                       padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
@@ -337,15 +337,15 @@ import 'package:gnw/widget/google_form.dart';
               ),
             ),
           ),
+                // Homepage ke sabse niche jahan overlay dikhate ho:
                 if (showOverlay)
                   LoadingOverlay(
                     onClose: () {
-                      // Jab user 'X' dabaye ya click kare, overlay turant hide ho jaye
                       setState(() {
                         _forceHideOverlay = true;
                       });
                     },
-                  ),        ],
+                  ),       ],
         ),
         ),
       );

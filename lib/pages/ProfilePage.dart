@@ -4,7 +4,6 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gnw/utils/SucessButton.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../login_signup page/login.dart';
@@ -142,16 +141,7 @@ class _ProfilepageState extends ConsumerState<Profilepage> {
     );
   }
 
-  Future<void> _pickImage() async {
-    final picker = ImagePicker();
-    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
 
-    if (pickedFile != null) {
-      setState(() {
-        _imageFile = File(pickedFile.path);
-      });
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -200,7 +190,6 @@ class _ProfilepageState extends ConsumerState<Profilepage> {
               Container(
                 transform: Matrix4.translationValues(0, -50 * wScale, 0),
                 child: GestureDetector(
-                  onTap: _pickImage,
                   child: Stack(
                     alignment: Alignment.bottomRight,
                     children: [
@@ -296,28 +285,30 @@ class _ProfilepageState extends ConsumerState<Profilepage> {
                           ),
                         ),
                         SizedBox(width: 10 * wScale),
+
+
                         // LOGOUT BUTTON
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 5.0),
-                          child: ElevatedButton.icon(
-                            onPressed: _showLogoutConfirmation,
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.white,
-                              foregroundColor: Colors.grey.shade700,
-                              padding: EdgeInsets.symmetric(horizontal: 16 * wScale, vertical: 10 * wScale),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(10 * wScale),
-                                side: BorderSide(color: Colors.grey.shade400, width: 1),
-                              ),
-                              elevation: 0,
-                            ),
-                            icon: Icon(Icons.logout_outlined, size: 18 * wScale),
-                            label: Text(
-                              'Logout',
-                              style: TextStyle(fontSize: 14 * wScale, fontWeight: FontWeight.bold),
-                            ),
-                          ),
-                        ),
+                        // Padding(
+                        //   padding: const EdgeInsets.symmetric(horizontal: 5.0),
+                        //   child: ElevatedButton.icon(
+                        //     onPressed: _showLogoutConfirmation,
+                        //     style: ElevatedButton.styleFrom(
+                        //       backgroundColor: Colors.white,
+                        //       foregroundColor: Colors.grey.shade700,
+                        //       padding: EdgeInsets.symmetric(horizontal: 16 * wScale, vertical: 10 * wScale),
+                        //       shape: RoundedRectangleBorder(
+                        //         borderRadius: BorderRadius.circular(10 * wScale),
+                        //         side: BorderSide(color: Colors.grey.shade400, width: 1),
+                        //       ),
+                        //       elevation: 0,
+                        //     ),
+                        //     icon: Icon(Icons.logout_outlined, size: 18 * wScale),
+                        //     label: Text(
+                        //       'Logout',
+                        //       style: TextStyle(fontSize: 14 * wScale, fontWeight: FontWeight.bold),
+                        //     ),
+                        //   ),
+                        // ),
                       ],
                     ),
 

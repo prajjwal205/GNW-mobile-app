@@ -10,15 +10,36 @@ class GoogleFormBannerWidget extends StatelessWidget {
   });
 
   // 🚀 Google Form Open karne ka function
+  // Future<void> _launchGoogleForm() async {
+  //   const url = 'https://forms.gle/gb94DkNwiR2LADwc8';
+  //   final uri = Uri.parse(url);
+  //
+  //   try {
+  //     if (await canLaunchUrl(uri)) {
+  //       await launchUrl(uri, mode: LaunchMode.externalApplication); // Browser me khulega
+  //     } else {
+  //       debugPrint("Could not launch $url");
+  //     }
+  //   } catch (e) {
+  //     debugPrint("Error launching url: $e");
+  //   }
+  // }
+
+  // 🚀 Google Form Open karne ka function
   Future<void> _launchGoogleForm() async {
     const url = 'https://forms.gle/gb94DkNwiR2LADwc8';
     final uri = Uri.parse(url);
 
     try {
-      if (await canLaunchUrl(uri)) {
-        await launchUrl(uri, mode: LaunchMode.externalApplication); // Browser me khulega
-      } else {
-        debugPrint("Could not launch $url");
+      // 🚀 canLaunchUrl ki condition hata di hai.
+      // Ab yeh direct browser open karne ka try karega.
+      bool launched = await launchUrl(
+        uri,
+        mode: LaunchMode.externalApplication,
+      );
+
+      if (!launched) {
+        debugPrint("Browser nahi khul paya $url");
       }
     } catch (e) {
       debugPrint("Error launching url: $e");
