@@ -107,8 +107,13 @@ class _FloatingSearchWidgetState extends ConsumerState<FloatingSearchWidget> {
       return;
     }
 
-    final data = ref.read(allSearchDataProvider).value;
-    if (data == null) return;
+    final data = ref.read(allSearchDataProvider).valueOrNull;
+
+    if (data == null) {
+      setState(() => _suggestions = []);
+      _hideOverlay();
+      return;
+    }
 
     // 🚀 SearchHelper use ho raha hai!
     final subCats = (data["subCategories"] as List<SubCategoryModel>).where((sc) => SearchHelper.isMatch(sc.categoryName, queryLower)).toList();
